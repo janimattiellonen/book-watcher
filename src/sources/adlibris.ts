@@ -92,6 +92,9 @@ export function parseAdlibris(html: string): ParsedPage {
       return {
         source: 'adlibris',
         title: cleanText(heading.text()),
+        // Several authors share one span, separated by commas as "First Last, First Last"
+        // (see the "Antti Tapani" card in the Paasilinna capture). No card has been seen
+        // with "Last, First".
         authors: details
           .filter((span) => span !== formatSpan)
           .flatMap((span) => cleanText($(span).text()).split(/\s*,\s*/))

@@ -64,6 +64,12 @@ describe('parseAdlibris', () => {
       expect(page.hasMore).toBe(true);
     });
 
+    it('splits several comma-separated authors on one card', () => {
+      const page = parseAdlibris(fixture('search-arto-paasilinna-fi-ebook-more-1.html'));
+      const card = page.results.find((result) => result.title === 'Antti Tapani');
+      expect(card?.authors).toEqual(['Antti Tuisku', 'Antti Aro', 'Anton Vanha-Majamaa']);
+    });
+
     it('keeps results by other authors for the matcher to filter out', () => {
       const page = parseAdlibris(fixture('search-arto-paasilinna-fi-ebook.html'));
       const authors = new Set(page.results.flatMap((result) => result.authors));
