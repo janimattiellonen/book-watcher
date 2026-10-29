@@ -7,8 +7,21 @@ import { type DbConfig, loadDbConfig } from '../dbConfig.js';
 // far below 2^53, so plain numbers are safe here.
 pg.types.setTypeParser(pg.types.builtins.NUMERIC, (value) => Number(value));
 pg.types.setTypeParser(pg.types.builtins.INT8, (value) => Number(value));
+// bigint[] (notifications.book_ids) has its own parser, which still yields strings. Its
+// text form is '{1,2,3}': plain digits, no quoting, and our id arrays hold no NULLs.
+// pg's TypeId enum lists only the scalar types, so the array OID needs a cast.
+const BIGINT_ARRAY_OID = 1016 as (typeof pg.types.builtins)['INT8'];
+pg.types.setTypeParser(BIGINT_ARRAY_OID, (value: string) =>
+  value === '{}' ? [] : value.slice(1, -1).split(',').map(Number),
+);
+// A `date` has no time zone; parsing it into a Date would pin it to local midnight and
+// shift the day for any other zone. It stays a 'YYYY-MM-DD' string.
+pg.types.setTypeParser(pg.types.builtins.DATE, (value) => value);
 
 export type Db = pg.Pool;
+
+/** The pool or a client checked out of it, so repositories also run inside a transaction. */
+export type Queryable = pg.Pool | pg.PoolClient;
 
 export function createPool(config: DbConfig = loadDbConfig()): Db {
   const pool = new pg.Pool(config);
