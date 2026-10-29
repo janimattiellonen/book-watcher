@@ -28,6 +28,7 @@ early so problems surface before the rest is built on top of it.
     fixtures.
 
   This way most tests never touch the network.
+
 - **Scheduling policy is a pure function.**
   `pickNextListener(listeners, lastRunEndedAt, now, config)` decides what may
   run. It is tested with a fake clock. The cron tick only calls it, and a
@@ -67,6 +68,7 @@ and `git init`. First check that the newest React Router 8.x is released, and
 stop to report back if it isn't.
 
 **Acceptance criteria:**
+
 - [ ] `npm run dev` serves a Tailwind-styled placeholder page at `http://localhost:3192`.
 - [ ] `npm run lint`, `npm run typecheck`, `npm run format` and `npm test` (one trivial test) pass.
 - [ ] `npm run check` runs all of the above.
@@ -90,6 +92,7 @@ invalid values. Add `src/db/pool.ts` (`pg` Pool) and
 `test:db`.
 
 **Acceptance criteria:**
+
 - [ ] `npm run db:up` starts a healthy Postgres 17 on `localhost:5499` with the dev and test databases.
 - [ ] `npm run db:migrate` runs and creates `pgmigrations`. A wrong argument exits non-zero with usage text.
 - [ ] An invalid `.env` value (e.g. `LISTENER_INTERVAL_HOURS=12`) makes config loading throw with a clear message.
@@ -112,6 +115,7 @@ Add a `set_updated_at` trigger function, plus indexes on `books(status)`,
 talokatsastus-api's.
 
 **Acceptance criteria:**
+
 - [ ] `db:migrate` creates every table, constraint and index.
 - [ ] `db:migrate:down` once per migration fully reverses them, and `db:migrate` re-applies them cleanly.
 - [ ] The check constraints reject invalid data (min > max price, unknown status).
@@ -125,6 +129,7 @@ talokatsastus-api's.
 **Estimated scope:** S
 
 ### Checkpoint 1: Foundation
+
 - [ ] `npm run check` passes and the migrations round-trip.
 - [ ] The website shell runs on :3192.
 - [ ] **Review with you before the scrapers are built.**
@@ -133,6 +138,7 @@ talokatsastus-api's.
 
 **Fixture-first rule for the whole phase:** parsers are developed and tested
 offline against saved HTML. Live requests are only used to capture fixtures:
+
 - **At most 5 live page loads per store for all of T4/T5.** Each one is logged
   in `tests/fixtures/<source>/CAPTURES.md` (date, URL, purpose).
 - Start from the HTML already captured in the PoC, which is saved in
@@ -154,6 +160,7 @@ offline against saved HTML. Live requests are only used to capture fixtures:
 normal desktop UA and locale, waits out the Vercel checkpoint (polling until
 the title no longer matches), and applies the 5–10 s polite delay between page
 loads. `src/sources/bokus.ts` contains:
+
 - the URL builder (`q`, `facets=format:EBOOK,languageCodes:<code>`);
 - pagination up to `MAX_PAGES_PER_SEARCH`;
 - a pure `parseBokus(html)`, which prefers the embedded Next.js data, falls
@@ -165,6 +172,7 @@ Output is validated with zod. This task also adds `npm run capture` and
 fixture-first rule above.
 
 **Acceptance criteria:**
+
 - [ ] `parseBokus` on the saved "Viveca Sten" (sv, e-book) fixture returns 27 results with ISBN, price in SEK and URL for each.
 - [ ] `parseBokus` fixture tests pass for a full results page, an empty results page and the checkpoint page (which must throw `BlockedError`, not return `[]`).
 - [ ] Pagination is understood and documented, and covered by a fixture if the store paginates.
@@ -188,6 +196,7 @@ first, DOM as fallback; ISBN from `/fi/kirja/<slug>-<isbn>`; EUR prices in
 `en→englanti`) and is wired into `npm run search`.
 
 **Acceptance criteria:**
+
 - [ ] `parseAdlibris` on the saved "Heikki Hietala" (fi, e-book) fixture returns 4 results with ISBN, a correctly parsed EUR price and URL.
 - [ ] Fixture tests pass for results, empty and checkpoint pages.
 - [ ] No more than 5 live Adlibris page loads in total, all logged in `CAPTURES.md`.
@@ -203,13 +212,15 @@ first, DOM as fallback; ISBN from `/fi/kirja/<slug>-<isbn>`; EUR prices in
 #### Task 6: Matching and normalization rules
 
 **Description:** These are pure functions in `src/watcher/matching.ts`:
+
 - `normalizeName` (case, diacritics, whitespace, "Sten, Viveca" → "viveca sten");
 - `matchesAuthor`, `normalizeIsbn`, `dedupeKey` (ISBN or `ta:` fallback);
 - `toEur` (SEK via `SEK_TO_EUR`), `inPriceRange` (open-ended bounds);
 - `matchesListener` (author, format, language and price combined).
 
 **Acceptance criteria:**
-- [ ] Authors match regardless of diacritics and name order, and do not match co-mentions such as "Viveca Stenberg" or a book *about* the author.
+
+- [ ] Authors match regardless of diacritics and name order, and do not match co-mentions such as "Viveca Stenberg" or a book _about_ the author.
 - [ ] Both bounds of the price range are inclusive, and either bound can be null.
 - [ ] The same ISBN in different formatting gives the same dedupe key.
 
@@ -222,6 +233,7 @@ first, DOM as fallback; ISBN from `/fi/kirja/<slug>-<isbn>`; EUR prices in
 **Estimated scope:** S
 
 ### Checkpoint 2: Sources
+
 - [ ] Both live smoke-test searches return correct, parsed results.
 - [ ] `CAPTURES.md` shows the live-request budget was respected.
 - [ ] All parser and matching tests pass.
@@ -232,6 +244,7 @@ first, DOM as fallback; ISBN from `/fi/kirja/<slug>-<isbn>`; EUR prices in
 #### Task 7: Repositories
 
 **Description:** Write the `src/db/` repositories with typed, parameterized SQL:
+
 - `listeners` (CRUD, `listDue`, `setLastRunAt`, `activate`);
 - `books` (`upsertFromResult` returning `{ book, created, becameEligible }`,
   `setStatus` for one or many books, the list queries per status and listener);
@@ -242,6 +255,7 @@ first, DOM as fallback; ISBN from `/fi/kirja/<slug>-<isbn>`; EUR prices in
 Add a test helper that truncates tables in `book_watcher_test`.
 
 **Acceptance criteria:**
+
 - [ ] Upserting the same ISBN from two sources gives one book with two offers.
 - [ ] `setStatus` updates `status_changed_at`, and the bulk version runs in one statement.
 - [ ] Every repository function has a `*.dbtest.ts` covering its main path.
@@ -264,6 +278,7 @@ in actions and show field errors. There are also delete (with confirmation)
 and enable/disable actions.
 
 **Acceptance criteria:**
+
 - [ ] I can create, edit, disable and delete a listener. Invalid input (empty author, min > max, no source) shows errors and saves nothing.
 - [ ] A new listener shows seed state `pending`.
 - [ ] Deleting a listener leaves its books in place.
@@ -281,6 +296,7 @@ and enable/disable actions.
 #### Task 9: Listener run service
 
 **Description:** `src/watcher/runListener.ts` runs one listener as follows:
+
 1. Pick the run kind: `seed` if the listener is pending, otherwise `watch`.
 2. For each source, in order:
    - search it, with a `runs` row per source;
@@ -296,6 +312,7 @@ and enable/disable actions.
 Sources and the clock are injected.
 
 **Acceptance criteria:**
+
 - [ ] A seed records books with `found_during_seed=true` and `notify_pending=false`, and activates the listener only if all sources succeeded.
 - [ ] A seed with one failing source leaves the listener `pending`, records the error, and sets `last_run_at`.
 - [ ] A watch run flags new books and in-range price drops for notification, but not already known books. Book statuses are never changed.
@@ -319,6 +336,7 @@ pick order (pending first, then the oldest `last_run_at`). It also provides
 follows the same rules and prints why it refuses when it can't run.
 
 **Acceptance criteria:**
+
 - [ ] With a fake clock, a listener never runs twice within 24 h, and no two runs start less than `MIN_GAP_MINUTES` apart.
 - [ ] A pending seed is picked before an active listener that is due.
 - [ ] A manual run while the scheduler holds the lock refuses, even with `--force`.
@@ -335,6 +353,7 @@ follows the same rules and prints why it refuses when it can't run.
 
 **Description:** Port player-tracker's `Mailer` interface, the Nodemailer and
 Resend implementations and the mock mode.
+
 - `src/notifications/digest.ts` builds the digest e-mail: a subject, then
   text and HTML grouped by author, with title, price per source, links, and a
   link to `localhost:3192`.
@@ -352,6 +371,7 @@ Resend implementations and the mock mode.
 `npm run test-email`.
 
 **Acceptance criteria:**
+
 - [ ] With a fake clock: not due at 04:59. Due at 05:00, and at 09:30 if 05:00 was missed. Not due again the same day after `sent`, `mocked` or `empty`. Due again 30 minutes after a `failed` attempt.
 - [ ] No queued books means no e-mail, and an `empty` row is recorded. A failing mailer leaves the books queued.
 - [ ] With `EMAIL_NOTIFICATIONS_ENABLED=false`, nothing is sent or recorded, and the books stay queued.
@@ -368,6 +388,7 @@ Resend implementations and the mock mode.
 
 **Description:** `src/scripts/scheduler.ts` runs a `node-cron` tick every
 minute. On each tick it:
+
 1. sends the daily digest if notifications are enabled and `isDigestDue`
    says so (guarded so two digests can't overlap);
 2. takes the scraping lock, and skips the rest if it can't;
@@ -380,6 +401,7 @@ due, whether notifications are on, and the digest time). It shuts down cleanly
 on SIGINT/SIGTERM, letting the current run finish or closing the browser.
 
 **Acceptance criteria:**
+
 - [ ] A scheduler started with 2 due listeners runs one immediately and the second only after the gap.
 - [ ] A listener run never triggers an e-mail. The digest is sent only by the digest step, even while a listener run is in progress.
 - [ ] An exception in a run is logged and doesn't kill the process.
@@ -394,6 +416,7 @@ on SIGINT/SIGTERM, letting the current run finish or closing the browser.
 **Estimated scope:** S–M
 
 ### Checkpoint 3: Pipeline end to end
+
 - [ ] Create a listener for Viveca Sten (sv, Bokus + Adlibris) in the UI, seed it with `run-listener`, and see books in the DB with no e-mail sent.
 - [ ] Delete one book row and re-run with `--force`. The book is queued but no e-mail is sent. `npm run digest -- --force` (mock mode, notifications enabled) then sends exactly one digest containing it, and a second `npm run digest` without `--force` does nothing.
 - [ ] `npm run check` and `npm run test:db` pass.
@@ -411,6 +434,7 @@ filtered by listener. They are sorted newest first, by `first_seen_at` or
 `status_changed_at`.
 
 **Acceptance criteria:**
+
 - [ ] Marking a book moves it to the right view, and any status can be changed to any other.
 - [ ] A book on both stores shows as one card with two prices.
 - [ ] The listener filter works on every view.
@@ -431,6 +455,7 @@ checkbox-selected (with a "select all" option) and bulk-marked as read,
 accepted or rejected.
 
 **Acceptance criteria:**
+
 - [ ] Bulk-marking 30 seeded books takes one form submit and updates them all.
 - [ ] The page shows the next expected run, computed by `nextExpectedRun`.
 
@@ -450,6 +475,7 @@ highlighted. The listeners page shows a warning when the enabled listeners
 can't all fit into 24 hours with the configured gap.
 
 **Acceptance criteria:**
+
 - [ ] Failed and suspicious runs stand out visually and show their error text.
 - [ ] The capacity warning appears when the listener count × (gap + average run duration) exceeds 24 h.
 
@@ -472,6 +498,7 @@ settings and troubleshooting (suspicious runs, refreshing parser fixtures).
 Then do a final pass through the spec's success criteria.
 
 **Acceptance criteria:**
+
 - [ ] A fresh clone gets to a working setup by following only the README.
 - [ ] Every success criterion in the spec is checked off, with evidence.
 
@@ -484,6 +511,7 @@ Then do a final pass through the spec's success criteria.
 **Estimated scope:** S
 
 ### Checkpoint: Complete
+
 - [ ] All the spec's success criteria are met.
 - [ ] The scheduler has run for at least a day with real listeners, and no listener ran more than once.
 - [ ] One real digest e-mail arrived at about 05:00, or nothing arrived because nothing was queued.
@@ -491,16 +519,16 @@ Then do a final pass through the spec's success criteria.
 
 ## Risks and Mitigations
 
-| Risk | Impact | Mitigation |
-|---|---|---|
-| A store tightens the Vercel checkpoint, or blocks headless Chromium | High | Detect the checkpoint page and throw `BlockedError`, so a block never looks like "0 results". Failed runs still count toward the daily limit, so a blocking store isn't hammered. Fallback: run headed Chromium or a persistent browser profile (ask first). |
-| Store markup changes and breaks a parser | High | Prefer embedded JSON over CSS selectors. Zod validation fails loudly. The suspicious-result guard catches silent breakage. Refresh fixtures with `--save-fixture`. |
-| Search returns books by other authors (anthologies, books *about* the author) | Med | Strict author matching on parsed author lists (T6), covered by tests. |
-| The same book has different ISBNs per store or per edition | Med | Accept occasional duplicates. The ISBN-less fallback key covers the rest. Revisit if it happens often. |
-| Large back catalogues need many pages | Med | `MAX_PAGES_PER_SEARCH` with 5–10 s delays. A seed that hits the cap is logged as a warning, not silently truncated. |
-| React Router 8 not yet released or still unstable | Low | Check in T1, and ask before falling back to v7. |
-| The fixed SEK→EUR rate drifts | Low | It's configurable in `.env`, and price ranges are rough anyway. |
-| The Mac is asleep or the scheduler isn't running at 05:00 | Low | Catch-up rule: the digest is sent at the first wake-up after `DIGEST_TIME`, still at most once a day. |
+| Risk                                                                          | Impact | Mitigation                                                                                                                                                                                                                                                   |
+| ----------------------------------------------------------------------------- | ------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| A store tightens the Vercel checkpoint, or blocks headless Chromium           | High   | Detect the checkpoint page and throw `BlockedError`, so a block never looks like "0 results". Failed runs still count toward the daily limit, so a blocking store isn't hammered. Fallback: run headed Chromium or a persistent browser profile (ask first). |
+| Store markup changes and breaks a parser                                      | High   | Prefer embedded JSON over CSS selectors. Zod validation fails loudly. The suspicious-result guard catches silent breakage. Refresh fixtures with `--save-fixture`.                                                                                           |
+| Search returns books by other authors (anthologies, books _about_ the author) | Med    | Strict author matching on parsed author lists (T6), covered by tests.                                                                                                                                                                                        |
+| The same book has different ISBNs per store or per edition                    | Med    | Accept occasional duplicates. The ISBN-less fallback key covers the rest. Revisit if it happens often.                                                                                                                                                       |
+| Large back catalogues need many pages                                         | Med    | `MAX_PAGES_PER_SEARCH` with 5–10 s delays. A seed that hits the cap is logged as a warning, not silently truncated.                                                                                                                                          |
+| React Router 8 not yet released or still unstable                             | Low    | Check in T1, and ask before falling back to v7.                                                                                                                                                                                                              |
+| The fixed SEK→EUR rate drifts                                                 | Low    | It's configurable in `.env`, and price ranges are rough anyway.                                                                                                                                                                                              |
+| The Mac is asleep or the scheduler isn't running at 05:00                     | Low    | Catch-up rule: the digest is sent at the first wake-up after `DIGEST_TIME`, still at most once a day.                                                                                                                                                        |
 
 ## Parallelization
 
