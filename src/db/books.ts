@@ -172,6 +172,8 @@ export interface BookListItem extends Book {
 export interface BookListFilter {
   status: BookStatus;
   listenerId?: number;
+  /** Only books queued for the digest. */
+  queued?: boolean;
 }
 
 /**
@@ -181,7 +183,7 @@ export interface BookListFilter {
  */
 export async function listBooks(
   db: Queryable,
-  { status, listenerId }: BookListFilter,
+  { status, listenerId, queued = false }: BookListFilter,
 ): Promise<BookListItem[]> {
   const { rows } = await db.query<
     BookRow & { offers: Offer[]; listeners: { id: number; name: string }[] }
@@ -205,11 +207,25 @@ export async function listBooks(
        AND ($2::bigint IS NULL OR EXISTS (
          SELECT 1 FROM listener_books lb WHERE lb.book_id = b.id AND lb.listener_id = $2
        ))
+       AND (NOT $3::boolean OR b.notify_pending)
      ORDER BY CASE WHEN $1 = 'new' THEN b.eligible_at ELSE b.status_changed_at END DESC NULLS LAST,
               b.id DESC`,
-    [status, listenerId ?? null],
+    [status, listenerId ?? null, queued],
   );
   return rows.map((row) => ({ ...toBook(row), offers: row.offers, listeners: row.listeners }));
+}
+
+/** Takes books off the digest queue once a digest containing them went out. */
+export async function markNotified(
+  db: Queryable,
+  bookIds: readonly number[],
+  now: Date,
+): Promise<void> {
+  await db.query(
+    `UPDATE books SET notify_pending = false, notified_at = $2
+     WHERE id = ANY($1::bigint[])`,
+    [bookIds, now],
+  );
 }
 
 export interface OfferInput {

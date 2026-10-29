@@ -11,14 +11,18 @@ export interface NotificationInput {
   now: Date;
 }
 
-/** Records one digest attempt. */
+/**
+ * Records one digest attempt. A day holds at most one completed digest, so a second
+ * one, which only a forced digest can produce, is not recorded; returns false then.
+ */
 export async function recordNotification(
   db: Queryable,
   notification: NotificationInput,
-): Promise<void> {
-  await db.query(
+): Promise<boolean> {
+  const { rowCount } = await db.query(
     `INSERT INTO notifications (digest_date, book_ids, status, error, created_at)
-     VALUES ($1, $2, $3, $4, $5)`,
+     VALUES ($1, $2, $3, $4, $5)
+     ON CONFLICT (digest_date) WHERE status IN ('sent', 'mocked', 'empty') DO NOTHING`,
     [
       notification.digestDate,
       notification.bookIds,
@@ -27,6 +31,7 @@ export async function recordNotification(
       notification.now,
     ],
   );
+  return rowCount === 1;
 }
 
 export interface DigestDay {
