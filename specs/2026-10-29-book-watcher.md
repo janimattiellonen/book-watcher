@@ -311,7 +311,7 @@ flag. When the send succeeds, the flag is cleared and `notified_at` is set.
 | Package manager | npm                                                                                                 |
 | Website         | React Router 8 in framework mode (SSR, loaders and actions). Verify the latest stable 8.x at setup. |
 | Styling         | Tailwind CSS                                                                                        |
-| Scraping        | Playwright (Chromium)                                                                               |
+| Scraping        | Playwright (Chromium) loads pages; `cheerio` parses the saved HTML (approved 2026-10-29)            |
 | Database        | PostgreSQL 17 (`postgres:17`) in Docker, host port **5499**                                         |
 | DB client       | `pg`                                                                                                |
 | Migrations      | `node-pg-migrate` (SQL files)                                                                       |
