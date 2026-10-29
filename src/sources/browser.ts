@@ -6,8 +6,18 @@ const USER_AGENT =
 /** How long to wait for the stores' security checkpoint to let the browser through. */
 const CHECKPOINT_TIMEOUT_MS = 30_000;
 
-export async function launchBrowser(): Promise<Browser> {
-  return chromium.launch({ headless: true });
+/**
+ * By default Playwright closes the browser and exits the process on Ctrl+C. A
+ * long-running caller that shuts down on its own terms passes `handleSignals: false`;
+ * Playwright still kills the browser if the process exits with it open.
+ */
+export async function launchBrowser({ handleSignals = true } = {}): Promise<Browser> {
+  return chromium.launch({
+    headless: true,
+    handleSIGINT: handleSignals,
+    handleSIGTERM: handleSignals,
+    handleSIGHUP: handleSignals,
+  });
 }
 
 export async function newPage(browser: Browser, locale: string): Promise<Page> {

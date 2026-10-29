@@ -52,11 +52,12 @@ describe('getDigestDay', () => {
     expect((await getDigestDay(db, '2026-10-29')).completed).toBe(false);
   });
 
-  it('allows one completed digest per day', async () => {
-    await recordNotification(db, attempt({ status: 'sent' }));
-    await expect(recordNotification(db, attempt({ status: 'empty' }))).rejects.toThrow(
-      /uq_notifications_completed_per_day/,
-    );
+  it('keeps one completed digest per day, and says when it did not record another', async () => {
+    expect(await recordNotification(db, attempt({ status: 'sent' }))).toBe(true);
+    expect(await recordNotification(db, attempt({ status: 'empty' }))).toBe(false);
+    expect(await recordNotification(db, attempt({ status: 'failed', error: 'x' }))).toBe(true);
+    const { rows } = await db.query('SELECT status FROM notifications ORDER BY id');
+    expect(rows).toEqual([{ status: 'sent' }, { status: 'failed' }]);
   });
 });
 

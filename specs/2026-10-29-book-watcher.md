@@ -105,7 +105,7 @@ format and price requirements.
 - A day's digest counts as completed when its status is `sent`, `mocked` or
   `empty`. A book queued after that waits for the next day's digest.
 - Each book is notified **at most once**. `notified_at` is set and the queue
-  flag cleared only after a successful send.
+  flag cleared after a successful send, or when the book's status leaves `new`.
 - A failed send keeps the books queued and is retried every 30 minutes that
   day. If it still hasn't succeeded, the books go into the next day's digest.
 - With notifications disabled, books stay queued and no digest runs. When I
@@ -301,7 +301,9 @@ CREATE UNIQUE INDEX notifications_one_completed_per_day
 Notification rule: `notify_pending` is set to `true` when a book first becomes
 eligible (in range for a listener) through an `active` listener. Books found
 during a seed never get the flag. The daily digest sends every book with the
-flag. When the send succeeds, the flag is cleared and `notified_at` is set.
+flag. When the send succeeds, the flag is cleared and `notified_at` is set. The
+flag is also cleared when a book's status changes away from `new`; a book set
+back to `new` is not re-queued.
 
 ## Tech Stack
 

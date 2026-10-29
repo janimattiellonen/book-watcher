@@ -12,7 +12,29 @@ describe('loadConfig', () => {
       gapJitterMinutes: 10,
       maxPagesPerSearch: 10,
       sekToEur: 0.087,
+      emailNotificationsEnabled: false,
+      digestTime: '05:00',
+      email: {
+        provider: 'nodemailer',
+        mockMode: false,
+        to: '',
+        smtp: { host: 'smtp.gmail.com', port: 587, secure: false, user: '', password: '' },
+        resend: { apiKey: '', from: 'onboarding@resend.dev' },
+      },
     });
+  });
+
+  it('sends the digest to SMTP_USER unless EMAIL_TO is set', () => {
+    expect(loadConfig({ SMTP_USER: 'me@example.com' }).email.to).toBe('me@example.com');
+    expect(loadConfig({ SMTP_USER: 'me@example.com', EMAIL_TO: 'you@example.com' }).email.to).toBe(
+      'you@example.com',
+    );
+  });
+
+  it('rejects a misspelled flag and a digest time that is not HH:MM', () => {
+    expect(() => loadConfig({ EMAIL_NOTIFICATIONS_ENABLED: 'yes', DIGEST_TIME: '5:00' })).toThrow(
+      /EMAIL_NOTIFICATIONS_ENABLED[\s\S]*DIGEST_TIME/,
+    );
   });
 
   it('reads values from the environment', () => {

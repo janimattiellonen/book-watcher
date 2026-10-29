@@ -3,6 +3,11 @@ import { z } from 'zod';
 export const SOURCE_IDS = ['adlibris', 'bokus'] as const;
 export type SourceId = (typeof SOURCE_IDS)[number];
 
+export const SOURCE_LABELS: Record<SourceId, string> = {
+  adlibris: 'Adlibris',
+  bokus: 'Bokus',
+};
+
 export const FORMATS = ['ebook'] as const;
 export type Format = (typeof FORMATS)[number];
 

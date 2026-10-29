@@ -10,10 +10,7 @@ export const LANGUAGES = [
   { code: 'en', label: 'English' },
 ] as const;
 
-export const SOURCE_LABELS: Record<(typeof SOURCE_IDS)[number], string> = {
-  adlibris: 'Adlibris',
-  bokus: 'Bokus',
-};
+export { SOURCE_LABELS } from '../../src/sources/types';
 
 /** The form as submitted, kept as text so an invalid form shows back what was typed. */
 export interface ListenerFormValues {

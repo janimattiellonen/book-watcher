@@ -365,7 +365,8 @@ Resend implementations and the mock mode.
 - `sendDailyDigest(db, mailer, now)` reads the `notify_pending` books and
   either records `empty` or sends one e-mail. On success it records
   `sent`/`mocked`, clears the flags and sets `notified_at` in one transaction.
-  On failure it records `failed` and leaves the flags.
+  On failure it records `failed` and leaves the flags. `setStatus` clears the flag
+  of a book moved away from `new`, so the digest never sends triaged books.
 
 `EMAIL_NOTIFICATIONS_ENABLED` (default `false`) and `DIGEST_TIME` (default
 `05:00`) go into `config.ts`. Includes `npm run digest -- [--force]` and
