@@ -1,8 +1,8 @@
 import { afterAll, beforeEach, describe, expect, it } from 'vitest';
 
-import { createPool } from './pool.js';
+import { createTestPool } from './testPool.js';
 
-const db = createPool();
+const db = createTestPool();
 
 afterAll(() => db.end());
 
