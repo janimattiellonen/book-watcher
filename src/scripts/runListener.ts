@@ -72,11 +72,20 @@ async function main(id: number, force: boolean): Promise<number> {
     console.log(
       `${listener.seedState === 'pending' ? 'Seeding' : 'Watching'} ${listener.name} on ${listener.sources.join(', ')}…`,
     );
-    const summary = await withLiveSearch(config.maxPagesPerSearch, (search, pause) =>
-      runListener(
-        { db, search, pause, now: () => new Date(), sekToEur: config.sekToEur, log: console.warn },
-        listener,
-      ),
+    const summary = await withLiveSearch(
+      { maxPagesPerSearch: config.maxPagesPerSearch },
+      (search, pause) =>
+        runListener(
+          {
+            db,
+            search,
+            pause,
+            now: () => new Date(),
+            sekToEur: config.sekToEur,
+            log: console.warn,
+          },
+          listener,
+        ),
     );
 
     console.table(summary.sources);

@@ -28,7 +28,8 @@
     "search": "tsx --env-file-if-exists=.env src/scripts/search.ts",
     "run-listener": "tsx --env-file-if-exists=.env src/scripts/runListener.ts",
     "digest": "tsx --env-file-if-exists=.env src/scripts/digest.ts",
-    "test-email": "tsx --env-file-if-exists=.env src/scripts/testEmail.ts"
+    "test-email": "tsx --env-file-if-exists=.env src/scripts/testEmail.ts",
+    "scheduler": "tsx --env-file-if-exists=.env src/scripts/scheduler.ts"
   },
   "dependencies": {
     "@react-router/node": "^8.5.1",
