@@ -22,18 +22,19 @@ format and price requirements.
 
 ### Core concepts
 
-| Concept | Meaning |
-|---|---|
-| **Source** | A bookstore with its own search adapter: `adlibris` (adlibris.com/fi, EUR) and `bokus` (bokus.com, SEK). |
-| **Listener** | One author plus the requirements I want to apply: language, format, price range (EUR) and the sources to search. One author normally maps to one listener because I read each author in one language. |
-| **Book** | A unique title, deduplicated across sources by ISBN. |
-| **Offer** | A book's listing on one source: URL, price and currency. A book has one offer per source. |
-| **Seed** | A listener's first complete run. It records every existing book silently, without notifications. |
-| **Book status** | `new` (a suggestion waiting for a decision), `accepted` (on my reading list), `read`, `rejected`. |
+| Concept         | Meaning                                                                                                                                                                                               |
+| --------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Source**      | A bookstore with its own search adapter: `adlibris` (adlibris.com/fi, EUR) and `bokus` (bokus.com, SEK).                                                                                              |
+| **Listener**    | One author plus the requirements I want to apply: language, format, price range (EUR) and the sources to search. One author normally maps to one listener because I read each author in one language. |
+| **Book**        | A unique title, deduplicated across sources by ISBN.                                                                                                                                                  |
+| **Offer**       | A book's listing on one source: URL, price and currency. A book has one offer per source.                                                                                                             |
+| **Seed**        | A listener's first complete run. It records every existing book silently, without notifications.                                                                                                      |
+| **Book status** | `new` (a suggestion waiting for a decision), `accepted` (on my reading list), `read`, `rejected`.                                                                                                     |
 
 ### User stories and acceptance criteria
 
 **US-1 Manage listeners**
+
 - I can create, edit, enable/disable and delete a listener on the website.
 - Fields: display name, author name (the search query), language, format (default
   e-book), min price and max price in EUR (each optional), sources (one or both,
@@ -43,6 +44,7 @@ format and price requirements.
 - Deleting a listener keeps the books it found, along with their statuses.
 
 **US-2 Seed a new listener**
+
 - A listener in state `pending` is seeded in the next free scheduler slot (see
   US-6), ahead of any active listener that is due. I can also seed it right away
   with `npm run run-listener -- --listener <id>`.
@@ -54,10 +56,11 @@ format and price requirements.
   partially seeded listener never becomes `active`.
 - Once the seed succeeds, the listener becomes `active` and `seeded_at` is set.
 - The website shows seeded books under the listener. There I can bulk-mark them
-  (select all, then *read*, *accepted* or *rejected*), because a seed can return
+  (select all, then _read_, _accepted_ or _rejected_), because a seed can return
   dozens of books.
 
 **US-3 Detect new books**
+
 - When an enabled `active` listener is due (US-6), it searches its sources.
 - A search result counts only if all of these hold:
   - the parsed author list contains the listener's author (a normalized,
@@ -74,6 +77,7 @@ format and price requirements.
   notification once.
 
 **US-4 Review and mark books**
+
 - The **Suggestions** view lists books with status `new`: newest first, with
   cover, title, author, price per source with links, and the listener that found
   them.
@@ -84,6 +88,7 @@ format and price requirements.
 - I can filter all views by listener/author.
 
 **US-5 E-mail notifications**
+
 - E-mail is turned on and off with `EMAIL_NOTIFICATIONS_ENABLED=true|false`
   (default `false`, so nothing is sent until I opt in).
 - Finding a book never sends an e-mail straight away. It only queues the book
@@ -93,7 +98,7 @@ format and price requirements.
   one digest e-mail grouped by author. Each entry has the title, prices and
   links per source, and a link to the local website. With nothing queued, no
   e-mail is sent.
-- **Catch-up:** the digest is *due* when the local time is past `DIGEST_TIME`
+- **Catch-up:** the digest is _due_ when the local time is past `DIGEST_TIME`
   and no digest has been completed for today. If the Mac was asleep or the
   scheduler wasn't running at 05:00, the digest goes out at the first scheduler
   wake-up after that, still at most once per day.
@@ -124,12 +129,13 @@ spread over the day.
 
   Sending the digest never contacts the stores, so it doesn't wait for the gap
   between listener runs.
-- **Once a day per listener:** a listener is *due* when `last_run_at` is null
+
+- **Once a day per listener:** a listener is _due_ when `last_run_at` is null
   or at least `LISTENER_INTERVAL_HOURS` ago (default 24; values below 24 are
   rejected at startup).
 - **Gap between runs:** a run starts only if at least `MIN_GAP_MINUTES`
   (default 30) plus a random jitter of 0–`GAP_JITTER_MINUTES` (default 10) have
-  passed since the previous run of *any* listener ended. Listeners therefore
+  passed since the previous run of _any_ listener ended. Listeners therefore
   never run back to back.
 - **Picking order** among due listeners: `pending` seeds first, then the oldest
   `last_run_at`.
@@ -156,7 +162,7 @@ spread over the day.
 ## Key technical decisions
 
 1. **Fetching uses a headless browser (Playwright, Chromium).** Both stores
-   currently answer plain HTTP requests with a *Vercel Security Checkpoint*
+   currently answer plain HTTP requests with a _Vercel Security Checkpoint_
    (HTTP 429, a JavaScript challenge), which I verified on 2026-10-29. Each
    source adapter opens the store's search URL, waits for the result list, and
    extracts the data from the rendered DOM or from embedded JSON state if the
@@ -299,22 +305,22 @@ flag. When the send succeeds, the flag is cleared and `notified_at` is set.
 
 ## Tech Stack
 
-| Area | Choice |
-|---|---|
-| Language | TypeScript (strict), ESM |
-| Package manager | npm |
-| Website | React Router 8 in framework mode (SSR, loaders and actions). Verify the latest stable 8.x at setup. |
-| Styling | Tailwind CSS |
-| Scraping | Playwright (Chromium) |
-| Database | PostgreSQL 17 (`postgres:17`) in Docker, host port **5499** |
-| DB client | `pg` |
-| Migrations | `node-pg-migrate` (SQL files) |
-| Validation | `zod` (env, forms, parsed scraper output) |
-| Scheduler | `node-cron` |
-| E-mail | `nodemailer` and `resend` behind a `Mailer` interface |
-| Script runner | `tsx` |
-| Tests | `vitest` |
-| Quality | ESLint (flat config, typescript-eslint), Prettier, `tsc --noEmit` |
+| Area            | Choice                                                                                              |
+| --------------- | --------------------------------------------------------------------------------------------------- |
+| Language        | TypeScript (strict), ESM                                                                            |
+| Package manager | npm                                                                                                 |
+| Website         | React Router 8 in framework mode (SSR, loaders and actions). Verify the latest stable 8.x at setup. |
+| Styling         | Tailwind CSS                                                                                        |
+| Scraping        | Playwright (Chromium)                                                                               |
+| Database        | PostgreSQL 17 (`postgres:17`) in Docker, host port **5499**                                         |
+| DB client       | `pg`                                                                                                |
+| Migrations      | `node-pg-migrate` (SQL files)                                                                       |
+| Validation      | `zod` (env, forms, parsed scraper output)                                                           |
+| Scheduler       | `node-cron`                                                                                         |
+| E-mail          | `nodemailer` and `resend` behind a `Mailer` interface                                               |
+| Script runner   | `tsx`                                                                                               |
+| Tests           | `vitest`                                                                                            |
+| Quality         | ESLint (flat config, typescript-eslint), Prettier, `tsc --noEmit`                                   |
 
 ## Commands
 

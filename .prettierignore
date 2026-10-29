@@ -1,0 +1,10 @@
+build/
+node_modules/
+.react-router/
+package-lock.json
+.agents/
+.claude/
+prompts/
+
+# Captured store pages are kept byte-for-byte as the stores served them.
+tests/fixtures/**/*.html
