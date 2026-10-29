@@ -21,6 +21,9 @@ const FORMAT_FACETS: Record<Format, string> = { ebook: 'E-kirja' };
 /** Format labels on result cards, mapped to our normalized formats. */
 const FORMAT_LABELS: Record<string, Format> = { 'E-kirja': 'ebook' };
 
+/** Label of the "load more" button below the results. */
+export const LOAD_MORE_LABEL = 'Lataa lisää';
+
 export function adlibrisSearchUrl(query: SearchQuery): string {
   const languageFacet = LANGUAGE_FACETS[query.language];
   if (!languageFacet) {
@@ -43,10 +46,13 @@ export function parseAdlibris(html: string): ParsedPage {
   assertNotBlocked(html);
   const $ = cheerio.load(html);
 
-  const countMatch = /(\d[\d\s]*)(?:<!-- -->)?\s*osuma/.exec(html);
-  const searchInput = $('[data-testid="search-input"]');
-  if (!countMatch && searchInput.length === 0) {
-    throw new UnexpectedPageError('No Adlibris hit count or search field on the page');
+  // The hit count next to the filters ("54 osumaa"), present even when it is 0.
+  const hitCount = $('main p')
+    .toArray()
+    .map((p) => /^(\d[\d\s]*)osumaa$/.exec(cleanText($(p).text())))
+    .find(Boolean);
+  if (!hitCount) {
+    throw new UnexpectedPageError('No Adlibris hit count on the page');
   }
 
   const results = $('article')
@@ -85,8 +91,9 @@ export function parseAdlibris(html: string): ParsedPage {
 
   return {
     results: validateResults(results),
-    totalCount: countMatch ? parseCount(countMatch[1]) : null,
-    hasMore: false,
+    totalCount: parseCount(hitCount[1] ?? ''),
+    // Shown below the results only while more remain.
+    hasMore: $(`main button:contains("${LOAD_MORE_LABEL}")`).length > 0,
   };
 }
 

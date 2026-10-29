@@ -5,12 +5,12 @@
  *   npm run search -- --source bokus --author "Viveca Sten" --language sv --live
  *
  * Works on saved fixtures by default. `--live` searches the store itself and counts
- * against the request budget in the plan, so use it sparingly.
+ * against the request budget in the plan, so use it sparingly. It loads one page
+ * unless --max-pages allows "load more" clicks (each one is another request).
  */
-import { readFileSync } from 'node:fs';
+import { appendFileSync, readFileSync } from 'node:fs';
 import { parseArgs } from 'node:util';
 
-import { loadConfig } from '../config.js';
 import { launchBrowser } from '../sources/browser.js';
 import { searchSource, sources } from '../sources/index.js';
 import { type ParsedPage, SOURCE_IDS, type SourceId } from '../sources/types.js';
@@ -22,6 +22,7 @@ const { values } = parseArgs({
     author: { type: 'string' },
     language: { type: 'string' },
     live: { type: 'boolean', default: false },
+    'max-pages': { type: 'string', default: '1' },
   },
 });
 
@@ -44,9 +45,13 @@ if (values.fixture) {
       browser,
       source,
       { author: values.author, language: values.language, format: 'ebook' },
-      loadConfig().maxPagesPerSearch,
+      Number(values['max-pages']),
     );
     console.log(`${outcome.requests} request(s)${outcome.truncated ? ', TRUNCATED' : ''}`);
+    appendFileSync(
+      new URL(`../../tests/fixtures/${source.id}/CAPTURES.md`, import.meta.url),
+      `| ${new Date().toISOString().slice(0, 10)} | ${source.searchUrl({ author: values.author, language: values.language, format: 'ebook' })} | (not saved) | \`search --live\`, ${outcome.requests} request(s) |\n`,
+    );
     page = outcome.page;
   } finally {
     await browser.close();

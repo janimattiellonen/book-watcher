@@ -49,6 +49,37 @@ describe('parseAdlibris', () => {
     });
   });
 
+  describe('Arto Paasilinna, a list longer than one page', () => {
+    it('reports more results on the first page', () => {
+      const page = parseAdlibris(fixture('search-arto-paasilinna-fi-ebook.html'));
+      expect(page.totalCount).toBe(54);
+      expect(page.results).toHaveLength(24);
+      expect(page.hasMore).toBe(true);
+    });
+
+    it('reads every card loaded so far after "load more"', () => {
+      const page = parseAdlibris(fixture('search-arto-paasilinna-fi-ebook-more-1.html'));
+      expect(page.results).toHaveLength(48);
+      expect(new Set(page.results.map((result) => result.isbn)).size).toBe(48);
+      expect(page.hasMore).toBe(true);
+    });
+
+    it('keeps results by other authors for the matcher to filter out', () => {
+      const page = parseAdlibris(fixture('search-arto-paasilinna-fi-ebook.html'));
+      const authors = new Set(page.results.flatMap((result) => result.authors));
+      expect(authors).toContain('Arto Paasilinna');
+      expect(authors.size).toBeGreaterThan(1);
+    });
+  });
+
+  it('reads a search without hits as zero results', () => {
+    expect(parseAdlibris(fixture('search-empty.html'))).toEqual({
+      results: [],
+      totalCount: 0,
+      hasMore: false,
+    });
+  });
+
   it('throws BlockedError on the security checkpoint page', () => {
     expect(() => parseAdlibris(fixture('checkpoint-curl-429.html'))).toThrow(BlockedError);
   });

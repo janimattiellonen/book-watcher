@@ -56,6 +56,10 @@ export function parseBokus(html: string): ParsedPage {
   const countElement = $('[data-testid="product-count"]').first();
   const list = $('[data-test-id="product-list"]');
   if (countElement.length === 0 && list.length === 0) {
+    // A search without hits has neither, only a heading saying so.
+    if (/inga resultat/i.test($('main h1').first().text())) {
+      return { results: [], totalCount: 0, hasMore: false };
+    }
     throw new UnexpectedPageError('No Bokus result count or product list on the page');
   }
 

@@ -57,6 +57,35 @@ describe('parseBokus', () => {
     });
   });
 
+  describe('Astrid Lindgren, a list longer than one page', () => {
+    it('reports more results on the first page', () => {
+      const page = parseBokus(fixture('search-astrid-lindgren-sv-ebook.html'));
+      expect(page.totalCount).toBe(75);
+      expect(page.results).toHaveLength(30);
+      expect(page.hasMore).toBe(true);
+    });
+
+    it('reads every card loaded so far after "load more"', () => {
+      const page = parseBokus(fixture('search-astrid-lindgren-sv-ebook-more-1.html'));
+      expect(page.results).toHaveLength(60);
+      expect(new Set(page.results.map((result) => result.isbn)).size).toBe(60);
+      expect(page.hasMore).toBe(true);
+    });
+
+    it('reads every author of a book', () => {
+      const page = parseBokus(fixture('search-astrid-lindgren-sv-ebook.html'));
+      expect(page.results.some((result) => result.authors.length > 1)).toBe(true);
+    });
+  });
+
+  it('reads a search without hits as zero results', () => {
+    expect(parseBokus(fixture('search-empty.html'))).toEqual({
+      results: [],
+      totalCount: 0,
+      hasMore: false,
+    });
+  });
+
   it('throws BlockedError on the security checkpoint page', () => {
     expect(() => parseBokus(fixture('checkpoint-curl-429.html'))).toThrow(BlockedError);
   });

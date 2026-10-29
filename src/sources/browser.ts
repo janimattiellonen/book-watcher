@@ -29,6 +29,21 @@ export async function openPage(page: Page, url: string): Promise<void> {
     })
     .catch(() => undefined);
   await settle(page);
+  await removeConsentBanners(page);
+}
+
+/**
+ * Removes the cookie consent overlays (OneTrust on Bokus, Didomi on Adlibris), which
+ * otherwise intercept clicks such as "load more". Removing them gives no consent and
+ * costs no request, unlike clicking through them.
+ */
+async function removeConsentBanners(page: Page): Promise<void> {
+  await page.evaluate(() => {
+    for (const selector of ['#onetrust-consent-sdk', '#didomi-host']) {
+      document.querySelector(selector)?.remove();
+    }
+    document.body.style.overflow = 'auto';
+  });
 }
 
 /** Waits for client-side requests to quiet down, without failing if they never do. */

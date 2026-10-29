@@ -1,6 +1,6 @@
-import type { Browser, Page } from 'playwright';
+import type { Browser, Locator, Page } from 'playwright';
 
-import { adlibrisSearchUrl, parseAdlibris } from './adlibris.js';
+import { adlibrisSearchUrl, LOAD_MORE_LABEL, parseAdlibris } from './adlibris.js';
 import { bokusSearchUrl, parseBokus } from './bokus.js';
 import { newPage, openPage, politeDelay, settle } from './browser.js';
 import type { ParsedPage, SearchQuery, SourceId } from './types.js';
@@ -22,16 +22,11 @@ export const sources: Record<SourceId, Source> = {
     searchUrl: bokusSearchUrl,
     parse: parseBokus,
     async loadMore(page) {
-      const cards = page.locator('article[data-test-id="product-card-buy"]');
-      const before = await cards.count();
-      await page.locator('[data-test-id="listing-next-page"]').click();
-      await page.waitForFunction(
-        (count) =>
-          document.querySelectorAll('article[data-test-id="product-card-buy"]').length > count,
-        before,
-        { timeout: 30_000 },
+      await clickAndWaitForMore(
+        page,
+        'article[data-test-id="product-card-buy"]',
+        page.locator('[data-test-id="listing-next-page"]'),
       );
-      await settle(page);
     },
   },
   adlibris: {
@@ -39,10 +34,27 @@ export const sources: Record<SourceId, Source> = {
     locale: 'fi-FI',
     searchUrl: adlibrisSearchUrl,
     parse: parseAdlibris,
-    // Pagination not yet seen on a captured page; parseAdlibris reports hasMore: false.
-    loadMore: () => Promise.resolve(),
+    async loadMore(page) {
+      await clickAndWaitForMore(
+        page,
+        'main article',
+        page.locator('main button', { hasText: LOAD_MORE_LABEL }),
+      );
+    },
   },
 };
+
+/** Clicks a "load more" control and waits until more result cards are on the page. */
+async function clickAndWaitForMore(page: Page, cardSelector: string, button: Locator) {
+  const before = await page.locator(cardSelector).count();
+  await button.click();
+  await page.waitForFunction(
+    ([selector, count]) => document.querySelectorAll(selector).length > count,
+    [cardSelector, before] as const,
+    { timeout: 30_000 },
+  );
+  await settle(page);
+}
 
 export interface SearchOutcome {
   page: ParsedPage;
