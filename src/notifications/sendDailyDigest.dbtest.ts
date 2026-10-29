@@ -138,6 +138,19 @@ describe('sendDailyDigest', () => {
     const digest = await sendDailyDigest(db, fakeSend().send, at(5));
 
     expect(digest.bookIds).toEqual([kept]);
+    expect((await queue()).find((row) => row.id === rejected)?.notify_pending).toBe(false);
+  });
+
+  it('does not re-queue a marked book that is set back to new', async () => {
+    const id = await book('9789100000001');
+    await setStatus(db, [id], 'accepted');
+    await setStatus(db, [id], 'new');
+
+    const { send, sent } = fakeSend();
+    const digest = await sendDailyDigest(db, send, at(5));
+
+    expect(digest.status).toBe('empty');
+    expect(sent).toHaveLength(0);
   });
 
   it('notifies each book at most once', async () => {

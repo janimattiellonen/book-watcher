@@ -147,7 +147,8 @@ export async function setStatus(
   status: BookStatus,
 ): Promise<number> {
   const { rowCount } = await db.query(
-    `UPDATE books SET status = $2, status_changed_at = now()
+    `UPDATE books SET status = $2, status_changed_at = now(),
+       notify_pending = notify_pending AND $2 = 'new'
      WHERE id = ANY($1::bigint[]) AND status <> $2`,
     [bookIds, status],
   );
