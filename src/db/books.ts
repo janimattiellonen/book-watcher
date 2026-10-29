@@ -111,7 +111,8 @@ export async function upsertFromResult(
          language       = COALESCE(books.language, EXCLUDED.language),
          eligible_at    = COALESCE(books.eligible_at, EXCLUDED.eligible_at),
          notify_pending = books.notify_pending
-                          OR (books.eligible_at IS NULL AND EXCLUDED.notify_pending)
+                          OR (books.eligible_at IS NULL AND books.status = 'new'
+                              AND EXCLUDED.notify_pending)
        RETURNING *, (xmax = 0) AS created
      )
      SELECT upserted.*,

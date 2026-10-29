@@ -248,6 +248,18 @@ describe('setStatus', () => {
   });
 });
 
+describe('upsertFromResult queueing', () => {
+  it('does not queue a book that already left status new when it first comes in range', async () => {
+    const { book } = await upsertFromResult(db, result(), { ...watchInRange, inRange: false });
+    await setStatus(db, [book.id], 'rejected');
+
+    const again = await upsertFromResult(db, result(), { ...watchInRange, now: later });
+
+    expect(again.becameEligible).toBe(true);
+    expect(again.book.notifyPending).toBe(false);
+  });
+});
+
 describe('listBooks', () => {
   it('lists suggestions newest first, leaving out books never seen in range', async () => {
     const older = await upsertFromResult(db, result({ isbn: '9789137138461' }), watchInRange);
