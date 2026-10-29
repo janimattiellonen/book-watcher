@@ -127,9 +127,10 @@ describe('books', () => {
       'INSERT INTO listener_books (listener_id, book_id, found_during_seed) VALUES ($1, $2, true)',
       [listenerId, bookId],
     );
-    await db.query("INSERT INTO runs (listener_id, source, kind) VALUES ($1, 'bokus', 'seed')", [
-      listenerId,
-    ]);
+    await db.query(
+      "INSERT INTO runs (listener_id, source, kind, status) VALUES ($1, 'bokus', 'seed', 'running')",
+      [listenerId],
+    );
 
     await db.query('DELETE FROM listeners WHERE id = $1', [listenerId]);
 

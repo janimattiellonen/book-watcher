@@ -7,7 +7,7 @@ CREATE TABLE runs (
   listener_id bigint,
   source      text        NOT NULL,
   kind        text        NOT NULL,
-  status      text        NOT NULL DEFAULT 'running',
+  status      text        NOT NULL,
   results     integer,
   new_books   integer,
   error       text,

@@ -26,7 +26,6 @@ CREATE TABLE listeners (
   CONSTRAINT listeners_pkey PRIMARY KEY (id),
   CONSTRAINT ck_listeners_name_not_blank CHECK (btrim(name) <> ''),
   CONSTRAINT ck_listeners_author_not_blank CHECK (btrim(author) <> ''),
-  CONSTRAINT ck_listeners_format CHECK (format IN ('ebook')),
   CONSTRAINT ck_listeners_min_price CHECK (min_price_eur IS NULL OR min_price_eur >= 0),
   CONSTRAINT ck_listeners_max_price CHECK (max_price_eur IS NULL OR max_price_eur >= 0),
   CONSTRAINT ck_listeners_price_range CHECK (
