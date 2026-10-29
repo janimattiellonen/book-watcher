@@ -11,5 +11,12 @@ pg.types.setTypeParser(pg.types.builtins.INT8, (value) => Number(value));
 export type Db = pg.Pool;
 
 export function createPool(config: DbConfig = loadDbConfig()): Db {
-  return new pg.Pool(config);
+  const pool = new pg.Pool(config);
+  // An error on an idle pooled client (Postgres restart, dropped connection) is emitted
+  // on the pool; without a listener it is an uncaught exception that kills the process.
+  // The broken client is discarded and the next query gets a fresh connection.
+  pool.on('error', (error) => {
+    console.error('Postgres pool: idle client error', error);
+  });
+  return pool;
 }
