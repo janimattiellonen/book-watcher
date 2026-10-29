@@ -63,6 +63,14 @@ describe('parseListenerForm', () => {
     expect(result).toMatchObject({ ok: false, errors: { sources: 'Choose at least one source' } });
   });
 
+  it('rejects prices the database column cannot hold or that are not plain decimals', () => {
+    for (const bad of ['100000000', '1e9', '0x10', '4.999']) {
+      const result = parseListenerForm(form({ ...valid, maxPriceEur: bad }));
+      expect(result.ok).toBe(false);
+    }
+    expect(parseListenerForm(form({ ...valid, maxPriceEur: '99999999.99' })).ok).toBe(true);
+  });
+
   it('rejects negative and non-numeric prices', () => {
     const result = parseListenerForm(form({ ...valid, minPriceEur: '-1', maxPriceEur: 'cheap' }));
     expect(result).toMatchObject({

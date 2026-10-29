@@ -35,15 +35,25 @@ export type ListenerFormResult =
 
 const requiredText = (label: string) => z.string().trim().min(1, `${label} is required`);
 
+/** Largest value the `numeric(10,2)` price columns hold. */
+const MAX_PRICE_EUR = 99_999_999.99;
+
+/** Plain decimals only: no hex, exponent or more than two decimals. */
+const PRICE_PATTERN = /^-?\d+(?:[.,]\d{1,2})?$/;
+
 /** Empty means no bound. A decimal comma is accepted, as Finnish keyboards type one. */
 const price = z
   .string()
   .trim()
-  .transform((text) => (text === '' ? null : Number(text.replace(',', '.'))))
+  .transform((text) => {
+    if (text === '') return null;
+    return PRICE_PATTERN.test(text) ? Number(text.replace(',', '.')) : Number.NaN;
+  })
   .pipe(
     z
       .number({ error: 'Enter a price in euros, such as 4.99' })
       .min(0, 'The price cannot be negative')
+      .max(MAX_PRICE_EUR, 'The price is too large')
       .nullable(),
   );
 
