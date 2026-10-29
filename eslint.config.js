@@ -32,6 +32,13 @@ export default tseslint.config(
         'error',
         { argsIgnorePattern: '^_', varsIgnorePattern: '^_' },
       ],
+      // Loaders and actions `throw data(...)` for 404s and 400s, as React Router documents.
+      '@typescript-eslint/only-throw-error': [
+        'error',
+        {
+          allow: [{ from: 'package', package: 'react-router', name: 'DataWithResponseInit' }],
+        },
+      ],
     },
   },
 

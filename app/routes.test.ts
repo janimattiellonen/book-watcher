@@ -8,4 +8,14 @@ describe('routes', () => {
       expect.objectContaining({ index: true, file: 'routes/home.tsx' }),
     );
   });
+
+  it('serves the listener pages', () => {
+    expect(routes).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ path: 'listeners', file: 'routes/listeners.tsx' }),
+        expect.objectContaining({ path: 'listeners/new', file: 'routes/listenerForm.tsx' }),
+        expect.objectContaining({ path: 'listeners/:id/edit', file: 'routes/listenerForm.tsx' }),
+      ]),
+    );
+  });
 });

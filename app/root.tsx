@@ -2,6 +2,7 @@ import {
   isRouteErrorResponse,
   Links,
   Meta,
+  NavLink,
   Outlet,
   Scripts,
   ScrollRestoration,
@@ -28,8 +29,37 @@ export function Layout({ children }: { children: React.ReactNode }) {
   );
 }
 
+// Reading list, Read, Rejected and Runs join as their pages are built (plan phase 5).
+const NAV_ITEMS = [
+  { to: '/', label: 'Suggestions' },
+  { to: '/listeners', label: 'Listeners' },
+];
+
 export default function App() {
-  return <Outlet />;
+  return (
+    <>
+      <header className="border-b border-gray-200 dark:border-gray-800">
+        <nav className="mx-auto flex max-w-5xl items-center gap-6 px-8 py-3 text-sm">
+          <span className="font-semibold text-gray-900 dark:text-gray-100">Book Watcher</span>
+          {NAV_ITEMS.map((item) => (
+            <NavLink
+              key={item.to}
+              to={item.to}
+              end={item.to === '/'}
+              className={({ isActive }) =>
+                isActive
+                  ? 'font-medium text-blue-600 dark:text-blue-400'
+                  : 'text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-100'
+              }
+            >
+              {item.label}
+            </NavLink>
+          ))}
+        </nav>
+      </header>
+      <Outlet />
+    </>
+  );
 }
 
 export function ErrorBoundary({ error }: Route.ErrorBoundaryProps) {
