@@ -1,6 +1,11 @@
 import type { Browser, Locator, Page } from 'playwright';
 
-import { adlibrisSearchUrl, LOAD_MORE_LABEL, parseAdlibris } from './adlibris.js';
+import {
+  adlibrisSearchUrl,
+  FILTERS_APPLIED_LABEL,
+  LOAD_MORE_LABEL,
+  parseAdlibris,
+} from './adlibris.js';
 import { bokusSearchUrl, parseBokus } from './bokus.js';
 import { newPage, openPage, politeDelay, settle } from './browser.js';
 import type { ParsedPage, SearchQuery, SourceId } from './types.js';
@@ -11,6 +16,11 @@ export interface Source {
   locale: string;
   searchUrl(query: SearchQuery): string;
   parse(html: string): ParsedPage;
+  /**
+   * Waits until the page shows the results the URL asked for. If it never does, the
+   * page is read anyway and the parser rejects it.
+   */
+  waitUntilReady(page: Page): Promise<void>;
   /** Loads the next batch of results into the page, or does nothing if there is none. */
   loadMore(page: Page): Promise<void>;
 }
@@ -21,6 +31,8 @@ export const sources: Record<SourceId, Source> = {
     locale: 'sv-SE',
     searchUrl: bokusSearchUrl,
     parse: parseBokus,
+    // Bokus applies its facets on the server, so the first render is already filtered.
+    waitUntilReady: () => Promise.resolve(),
     async loadMore(page) {
       await clickAndWaitForMore(
         page,
@@ -34,6 +46,13 @@ export const sources: Record<SourceId, Source> = {
     locale: 'fi-FI',
     searchUrl: adlibrisSearchUrl,
     parse: parseAdlibris,
+    async waitUntilReady(page) {
+      await page
+        .locator('[data-testid="filter-header"] button', { hasText: FILTERS_APPLIED_LABEL })
+        .waitFor({ timeout: 30_000 })
+        .catch(() => undefined);
+      await settle(page);
+    },
     async loadMore(page) {
       await clickAndWaitForMore(
         page,
@@ -78,6 +97,7 @@ export async function searchSource(
   const page = await newPage(browser, source.locale);
   try {
     await openPage(page, source.searchUrl(query));
+    await source.waitUntilReady(page);
     let requests = 1;
     let html = await page.content();
     let parsed = source.parse(html);

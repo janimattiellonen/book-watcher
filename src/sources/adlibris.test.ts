@@ -80,6 +80,22 @@ describe('parseAdlibris', () => {
     });
   });
 
+  it('refuses a page read before the language and format filters were applied', () => {
+    const unfiltered = fixture('search-heikki-hietala-fi-ebook.html').replace(
+      'Suodata (2)',
+      'Suodata',
+    );
+    expect(() => parseAdlibris(unfiltered)).toThrow(/filters are not applied/);
+  });
+
+  it('gets the same results whichever way the space in the query is encoded', () => {
+    const titles = (name: string) =>
+      parseAdlibris(fixture(name)).results.map((result) => result.title);
+    expect(titles('search-heikki-hietala-poc-url.html')).toEqual(
+      titles('search-heikki-hietala-builder-url.html'),
+    );
+  });
+
   it('throws BlockedError on the security checkpoint page', () => {
     expect(() => parseAdlibris(fixture('checkpoint-curl-429.html'))).toThrow(BlockedError);
   });

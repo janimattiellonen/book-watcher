@@ -24,6 +24,13 @@ const FORMAT_LABELS: Record<string, Format> = { 'E-kirja': 'ebook' };
 /** Label of the "load more" button below the results. */
 export const LOAD_MORE_LABEL = 'Lataa lisää';
 
+/**
+ * Label of the filter button once the search URL's two refinements (language and
+ * format) are active. Adlibris applies them in the browser after the first render, so
+ * until this label shows, the page lists the unfiltered search.
+ */
+export const FILTERS_APPLIED_LABEL = 'Suodata (2)';
+
 export function adlibrisSearchUrl(query: SearchQuery): string {
   const languageFacet = LANGUAGE_FACETS[query.language];
   if (!languageFacet) {
@@ -53,6 +60,12 @@ export function parseAdlibris(html: string): ParsedPage {
     .find(Boolean);
   if (!hitCount) {
     throw new UnexpectedPageError('No Adlibris hit count on the page');
+  }
+  const filterLabel = cleanText($('[data-testid="filter-header"] button').first().text());
+  if (filterLabel !== FILTERS_APPLIED_LABEL) {
+    throw new UnexpectedPageError(
+      `Adlibris language and format filters are not applied (filter button reads "${filterLabel}")`,
+    );
   }
 
   const results = $('article')

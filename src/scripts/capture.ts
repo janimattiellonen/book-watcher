@@ -3,7 +3,7 @@
  * only script that contacts a store; parser work then iterates on the saved HTML.
  *
  *   npm run capture -- --source bokus --author "Viveca Sten" --language sv
- *     [--name slug] [--load-more N] [--purpose "why"] [--overwrite]
+ *     [--name slug] [--url exact-url] [--load-more N] [--purpose "why"] [--overwrite]
  *
  * Writes tests/fixtures/<source>/<slug>.html (+ .png), and <slug>-more-<k>.html after
  * each "load more", then logs every request it made in CAPTURES.md.
@@ -21,6 +21,7 @@ const { values } = parseArgs({
     author: { type: 'string' },
     language: { type: 'string' },
     name: { type: 'string' },
+    url: { type: 'string' },
     'load-more': { type: 'string', default: '0' },
     purpose: { type: 'string', default: '' },
     overwrite: { type: 'boolean', default: false },
@@ -51,7 +52,7 @@ if (existsSync(htmlFile) && !values.overwrite) {
   process.exit(1);
 }
 
-const url = source.searchUrl(query);
+const url = values.url ?? source.searchUrl(query);
 const loadMore = Number(values['load-more']);
 const today = new Date().toISOString().slice(0, 10);
 const log: string[] = [];
@@ -60,6 +61,7 @@ const browser = await launchBrowser();
 try {
   const page = await newPage(browser, source.locale);
   await openPage(page, url);
+  await source.waitUntilReady(page);
   const html = await page.content();
   writeFileSync(htmlFile, html);
   await page.screenshot({ path: new URL(`${slug}.png`, dir).pathname });
