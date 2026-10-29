@@ -26,5 +26,6 @@ capture predate T4 and are not counted. Counted loads, by row:
 | poc-url and builder-url (URL-encoding comparison, taken to diagnose the 73-hit result that was the filter-timing bug fixed in 0f936e4) | 2      |
 | **Total**                                                                                                                              | **10** |
 
-This is 5 over the plan's cap of 5 and has not been signed off. Do not make further live
-Adlibris loads without that sign-off.
+This is 5 over the plan's cap of 5. The overage was signed off by the project owner on
+2026-10-29 during the PR #2 review. The T4/T5 budget is spent; further live Adlibris loads
+need a new budget.
