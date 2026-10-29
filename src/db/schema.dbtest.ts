@@ -1,16 +1,12 @@
 import { afterAll, beforeEach, describe, expect, it } from 'vitest';
 
-import { createTestPool } from './testPool.js';
+import { createTestPool, truncateAll } from './testPool.js';
 
 const db = createTestPool();
 
 afterAll(() => db.end());
 
-beforeEach(async () => {
-  await db.query(
-    'TRUNCATE listeners, books, book_offers, listener_books, runs, notifications RESTART IDENTITY CASCADE',
-  );
-});
+beforeEach(() => truncateAll(db));
 
 async function insertListener(overrides: Record<string, unknown> = {}): Promise<number> {
   const values = {
