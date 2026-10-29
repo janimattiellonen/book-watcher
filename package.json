@@ -25,7 +25,8 @@
     "db:migrate:create": "node-pg-migrate create -m migrations -j sql",
     "test:db": "POSTGRES_DB=book_watcher_test tsx --env-file-if-exists=.env src/scripts/migrate.ts up && POSTGRES_DB=book_watcher_test vitest run --config vitest.db.config.ts --passWithNoTests",
     "capture": "tsx --env-file-if-exists=.env src/scripts/capture.ts",
-    "search": "tsx --env-file-if-exists=.env src/scripts/search.ts"
+    "search": "tsx --env-file-if-exists=.env src/scripts/search.ts",
+    "run-listener": "tsx --env-file-if-exists=.env src/scripts/runListener.ts"
   },
   "dependencies": {
     "@react-router/node": "^8.5.1",
