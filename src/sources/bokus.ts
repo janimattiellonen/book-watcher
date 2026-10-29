@@ -45,7 +45,10 @@ export function bokusSearchUrl(query: SearchQuery): string {
 /**
  * Reads a Bokus search results page.
  *
- * Bokus renders its results as HTML, one `product-card-buy` article per product. More
+ * Reads the DOM only. The page also embeds Next.js flight data, but that covers just the
+ * server-rendered first page: in the saved "load more" capture it holds 30 of the 60
+ * ISBNs on the page, so it cannot serve a page that has had "Visa N till" clicked.
+ * Results are HTML, one `product-card-buy` article per product. More
  * results load in place through the "Visa N till" button, so a page that has had it
  * clicked holds every card loaded so far.
  */

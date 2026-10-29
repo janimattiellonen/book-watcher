@@ -48,6 +48,10 @@ export function adlibrisSearchUrl(query: SearchQuery): string {
  *
  * Each product is an `<article>`. Cards don't state the language, so results carry
  * `language: null` and rely on the search URL's language refinement.
+ *
+ * Reads the DOM only. The JSON-LD on the page describes just the organisation and the
+ * site search, and the Next.js flight data holds none of the 48 ISBNs on the saved
+ * "load more" capture, so neither can supply the product cards.
  */
 export function parseAdlibris(html: string): ParsedPage {
   assertNotBlocked(html);

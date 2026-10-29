@@ -163,8 +163,9 @@ loads. `src/sources/bokus.ts` contains:
 
 - the URL builder (`q`, `facets=format:EBOOK,languageCodes:<code>`);
 - pagination up to `MAX_PAGES_PER_SEARCH`;
-- a pure `parseBokus(html)`, which prefers the embedded Next.js data, falls
-  back to the DOM, and extracts title, authors, ISBN-13 (from `/bok/<isbn>/`),
+- a pure `parseBokus(html)`, which reads the DOM (the embedded Next.js data
+  covers only the server-rendered first page, so it can't serve a "load more"
+  page), and extracts title, authors, ISBN-13 (from `/bok/<isbn>/`),
   format, language, price/currency, URL and cover.
 
 Output is validated with zod. This task also adds `npm run capture` and
@@ -190,8 +191,8 @@ fixture-first rule above.
 
 **Description:** `src/sources/adlibris.ts` builds the URL
 (`/fi/haku?q=…&refinementList[language][0]=<fi label>&refinementList[format][0]=E-kirja`)
-and parses the page with a pure `parseAdlibris(html)` (JSON-LD or Next.js data
-first, DOM as fallback; ISBN from `/fi/kirja/<slug>-<isbn>`; EUR prices in
+and parses the page with a pure `parseAdlibris(html)` (DOM only: the JSON-LD has no
+products and the Next.js data lacks the cards; ISBN from `/fi/kirja/<slug>-<isbn>`; EUR prices in
 `16,60 €` format). It includes the language map (`fi→suomi`, `sv→ruotsi`,
 `en→englanti`) and is wired into `npm run search`.
 
