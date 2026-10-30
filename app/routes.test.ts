@@ -3,9 +3,13 @@ import { describe, expect, it } from 'vitest';
 import routes from './routes';
 
 describe('routes', () => {
-  it('serves the home page at the index route', () => {
-    expect(routes).toContainEqual(
-      expect.objectContaining({ index: true, file: 'routes/home.tsx' }),
+  it('serves the four book views from one module, suggestions at the index', () => {
+    expect(routes).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ index: true, file: 'routes/books.tsx' }),
+        expect.objectContaining({ path: ':view', file: 'routes/books.tsx' }),
+        expect.objectContaining({ path: 'books/status', file: 'routes/bookStatus.ts' }),
+      ]),
     );
   });
 

@@ -6,7 +6,8 @@ export const SITE_URL = 'http://localhost:3192';
 
 type DigestBook = Pick<BookListItem, 'title' | 'authors' | 'offers'>;
 
-function formatPrice(offer: Offer): string {
+/** The offer's price, with the euro conversion for a SEK price. Also used by the book cards. */
+export function formatPrice(offer: Offer): string {
   if (offer.price === null) return 'price unknown';
   const original = `${offer.price.toFixed(2)} ${offer.currency === 'EUR' ? '€' : (offer.currency ?? '')}`;
   return offer.currency === 'EUR' || offer.priceEur === null
