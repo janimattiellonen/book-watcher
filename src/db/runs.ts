@@ -123,3 +123,21 @@ export async function listRecentRuns(
   );
   return rows.map(toRun);
 }
+
+/**
+ * How long one listener-source search takes on average, in seconds, over the latest
+ * finished runs. Null before any run has finished.
+ */
+export async function averageRunSeconds(db: Queryable, sample = 100): Promise<number | null> {
+  const { rows } = await db.query<{ seconds: number | null }>(
+    `SELECT avg(EXTRACT(EPOCH FROM finished_at - started_at))::float8 AS seconds
+     FROM (
+       SELECT started_at, finished_at FROM runs
+       WHERE finished_at IS NOT NULL
+       ORDER BY started_at DESC
+       LIMIT $1
+     ) latest`,
+    [sample],
+  );
+  return rows[0].seconds;
+}

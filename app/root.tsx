@@ -9,6 +9,7 @@ import {
 } from 'react-router';
 
 import type { Route } from './+types/root';
+import { BOOK_VIEWS } from './lib/bookViews';
 import './app.css';
 
 export function Layout({ children }: { children: React.ReactNode }) {
@@ -29,10 +30,10 @@ export function Layout({ children }: { children: React.ReactNode }) {
   );
 }
 
-// Reading list, Read, Rejected and Runs join as their pages are built (plan phase 5).
 const NAV_ITEMS = [
-  { to: '/', label: 'Suggestions' },
+  ...BOOK_VIEWS.map((view) => ({ to: view.path, label: view.title })),
   { to: '/listeners', label: 'Listeners' },
+  { to: '/runs', label: 'Runs' },
 ];
 
 export default function App() {

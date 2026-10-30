@@ -170,6 +170,23 @@ export interface BookListItem extends Book {
   listeners: { id: number; name: string }[];
 }
 
+/** A book row `b` with its offers and listeners, as `BookListItem` expects them. */
+const BOOK_LIST_COLUMNS = `b.*,
+  COALESCE((
+    SELECT json_agg(json_build_object(
+             'source', o.source, 'url', o.url, 'price', o.price,
+             'currency', o.currency, 'priceEur', o.price_eur
+           ) ORDER BY o.source)
+    FROM book_offers o WHERE o.book_id = b.id
+  ), '[]') AS offers,
+  COALESCE((
+    SELECT json_agg(json_build_object('id', l.id, 'name', l.name) ORDER BY lower(l.name), l.id)
+    FROM listener_books lb JOIN listeners l ON l.id = lb.listener_id
+    WHERE lb.book_id = b.id
+  ), '[]') AS listeners`;
+
+type BookListRow = BookRow & { offers: Offer[]; listeners: { id: number; name: string }[] };
+
 export interface BookListFilter {
   status: BookStatus;
   listenerId?: number;
@@ -186,22 +203,8 @@ export async function listBooks(
   db: Queryable,
   { status, listenerId, queued = false }: BookListFilter,
 ): Promise<BookListItem[]> {
-  const { rows } = await db.query<
-    BookRow & { offers: Offer[]; listeners: { id: number; name: string }[] }
-  >(
-    `SELECT b.*,
-       COALESCE((
-         SELECT json_agg(json_build_object(
-                  'source', o.source, 'url', o.url, 'price', o.price,
-                  'currency', o.currency, 'priceEur', o.price_eur
-                ) ORDER BY o.source)
-         FROM book_offers o WHERE o.book_id = b.id
-       ), '[]') AS offers,
-       COALESCE((
-         SELECT json_agg(json_build_object('id', l.id, 'name', l.name) ORDER BY lower(l.name), l.id)
-         FROM listener_books lb JOIN listeners l ON l.id = lb.listener_id
-         WHERE lb.book_id = b.id
-       ), '[]') AS listeners
+  const { rows } = await db.query<BookListRow>(
+    `SELECT ${BOOK_LIST_COLUMNS}
      FROM books b
      WHERE b.status = $1
        AND ($1 <> 'new' OR b.eligible_at IS NOT NULL)
@@ -214,6 +217,34 @@ export async function listBooks(
     [status, listenerId ?? null, queued],
   );
   return rows.map((row) => ({ ...toBook(row), offers: row.offers, listeners: row.listeners }));
+}
+
+export interface ListenerBook extends BookListItem {
+  /** The listener found it during its seed, so it is no news to the user. */
+  foundDuringSeed: boolean;
+}
+
+/**
+ * Every book one listener found, in any status and in range or not, the most recently
+ * found first.
+ */
+export async function listListenerBooks(
+  db: Queryable,
+  listenerId: number,
+): Promise<ListenerBook[]> {
+  const { rows } = await db.query<BookListRow & { found_during_seed: boolean }>(
+    `SELECT ${BOOK_LIST_COLUMNS}, link.found_during_seed
+     FROM listener_books link JOIN books b ON b.id = link.book_id
+     WHERE link.listener_id = $1
+     ORDER BY link.first_seen_at DESC, b.id DESC`,
+    [listenerId],
+  );
+  return rows.map((row) => ({
+    ...toBook(row),
+    offers: row.offers,
+    listeners: row.listeners,
+    foundDuringSeed: row.found_during_seed,
+  }));
 }
 
 /** Takes books off the digest queue once a digest containing them went out. */

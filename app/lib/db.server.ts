@@ -1,3 +1,5 @@
+import './env.server';
+
 import { createPool, type Db } from '../../src/db/pool';
 
 // One pool for the whole server. In development, Vite re-imports this module on every

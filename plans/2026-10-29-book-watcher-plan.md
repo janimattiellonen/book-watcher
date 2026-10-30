@@ -474,12 +474,13 @@ accepted or rejected.
 **Description:** `/runs` lists the latest runs (listener, source, kind, status,
 results, new books, error, duration), with failed and suspicious runs
 highlighted. The listeners page shows a warning when the enabled listeners
-can't all fit into 24 hours with the configured gap.
+can't all fit into `LISTENER_INTERVAL_HOURS` (24 h by default) with the
+configured gap.
 
 **Acceptance criteria:**
 
 - [ ] Failed and suspicious runs stand out visually and show their error text.
-- [ ] The capacity warning appears when the listener count × (gap + average run duration) exceeds 24 h.
+- [ ] The capacity warning appears when the listener count × (gap + average run duration) exceeds `LISTENER_INTERVAL_HOURS`.
 
 **Verification:** A unit test for the capacity calculation, and a manual check.
 
