@@ -100,5 +100,9 @@ describe('parseStatusChange', () => {
     expect(redirectTo('/rejected')).toBe('/rejected');
     expect(redirectTo('https://example.com/')).toBe('/');
     expect(redirectTo('//example.com/')).toBe('/');
+    expect(redirectTo('/\\evil.example')).toBe('/');
+    expect(redirectTo('/\t/evil.example')).toBe('/');
+    expect(redirectTo('/%5Cevil.example')).toBe('/%5Cevil.example');
+    expect(redirectTo('/rejected?page=2')).toBe('/rejected?page=2');
   });
 });

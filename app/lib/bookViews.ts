@@ -84,7 +84,18 @@ export function parseStatusChange(formData: FormData): StatusChange {
   }
 
   const back = formData.get('redirectTo');
-  const redirectTo =
-    typeof back === 'string' && back.startsWith('/') && !back.startsWith('//') ? back : '/';
+  const redirectTo = localPath(back);
   return { ok: true, bookIds: ids.map(Number), status, redirectTo };
+}
+
+/** Resolve against a dummy origin the way a browser would; keep the path only if the origin holds. */
+function localPath(value: FormDataEntryValue | null): string {
+  if (typeof value !== 'string' || !value.startsWith('/')) return '/';
+  try {
+    const base = 'http://local.invalid';
+    const url = new URL(value, base);
+    return url.origin === base ? url.pathname + url.search : '/';
+  } catch {
+    return '/';
+  }
 }
