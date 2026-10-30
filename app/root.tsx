@@ -30,10 +30,10 @@ export function Layout({ children }: { children: React.ReactNode }) {
   );
 }
 
-// Runs joins when its page is built (plan task 15).
 const NAV_ITEMS = [
   ...BOOK_VIEWS.map((view) => ({ to: view.path, label: view.title })),
   { to: '/listeners', label: 'Listeners' },
+  { to: '/runs', label: 'Runs' },
 ];
 
 export default function App() {

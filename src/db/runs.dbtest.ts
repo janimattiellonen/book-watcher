@@ -2,6 +2,7 @@ import { afterAll, beforeEach, describe, expect, it } from 'vitest';
 
 import { createListener, deleteListener } from './listeners.js';
 import {
+  averageRunSeconds,
   finishRun,
   hadResultsBefore,
   lastFinishedAt,
@@ -145,5 +146,28 @@ describe('listRecentRuns', () => {
 
     const [run] = await listRecentRuns(db, { limit: 10 });
     expect(run).toMatchObject({ listenerId: null, listenerName: null });
+  });
+});
+
+describe('averageRunSeconds', () => {
+  it('averages the latest finished runs, ignoring one still running', async () => {
+    expect(await averageRunSeconds(db)).toBeNull();
+
+    const listenerId = await listener();
+    await finishRun(
+      db,
+      await startRun(db, { listenerId, source: 'bokus', kind: 'seed', now: at(0) }),
+      ok(1, at(1)),
+    );
+    await finishRun(
+      db,
+      await startRun(db, { listenerId, source: 'adlibris', kind: 'seed', now: at(2) }),
+      ok(1, at(5)),
+    );
+    await startRun(db, { listenerId, source: 'bokus', kind: 'watch', now: at(10) });
+
+    expect(await averageRunSeconds(db)).toBe(120);
+    // Only the latest one.
+    expect(await averageRunSeconds(db, 1)).toBe(180);
   });
 });
