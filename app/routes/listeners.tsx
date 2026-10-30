@@ -2,7 +2,8 @@ import { data, Form, Link } from 'react-router';
 
 import { deleteListener, listListeners, setListenerEnabled } from '../../src/db/listeners';
 import { db } from '../lib/db.server';
-import { LANGUAGES, SOURCE_LABELS } from '../lib/listenerSchema';
+import { languageLabel, priceRange } from '../lib/listenerDisplay';
+import { SOURCE_LABELS } from '../lib/listenerSchema';
 import type { Route } from './+types/listeners';
 
 export function meta(_args: Route.MetaArgs) {
@@ -31,16 +32,6 @@ export async function action({ request }: Route.ActionArgs) {
     default:
       throw data('Unknown action', { status: 400 });
   }
-}
-
-const languageLabel = (code: string) =>
-  LANGUAGES.find((language) => language.code === code)?.label ?? code;
-
-function priceRange(min: number | null, max: number | null): string {
-  if (min === null && max === null) return 'Any price';
-  if (min === null) return `Up to ${max?.toFixed(2)} €`;
-  if (max === null) return `From ${min.toFixed(2)} €`;
-  return `${min.toFixed(2)}–${max.toFixed(2)} €`;
 }
 
 const dateTime = new Intl.DateTimeFormat('en-GB', { dateStyle: 'medium', timeStyle: 'short' });
@@ -87,7 +78,12 @@ export default function Listeners({ loaderData }: Route.ComponentProps) {
                 className={`border-b border-gray-100 dark:border-gray-900 ${listener.enabled ? '' : 'text-gray-400 dark:text-gray-600'}`}
               >
                 <td className="py-2 pr-4">
-                  {listener.name}
+                  <Link
+                    to={`/listeners/${listener.id}`}
+                    className="text-blue-600 hover:underline dark:text-blue-400"
+                  >
+                    {listener.name}
+                  </Link>
                   {listener.enabled ? null : <span className="ml-2 text-xs">(disabled)</span>}
                 </td>
                 <td className="py-2 pr-4">{listener.author}</td>

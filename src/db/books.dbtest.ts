@@ -4,6 +4,7 @@ import type { SearchResult } from '../sources/types.js';
 import {
   linkListenerBook,
   listBooks,
+  listListenerBooks,
   setStatus,
   upsertFromResult,
   type UpsertOptions,
@@ -346,5 +347,51 @@ describe('listBooks', () => {
 
     const [read] = await listBooks(db, { status: 'read' });
     expect(read).toMatchObject({ id: book.id, listeners: [] });
+  });
+});
+
+describe('listListenerBooks', () => {
+  it('lists every book one listener found, in any status, newest first', async () => {
+    const sten = await createListener(db, listenerInput);
+    const other = await createListener(db, { ...listenerInput, name: 'Other', author: 'Other' });
+    const seeded = await upsertFromResult(db, result(), { inRange: true, notify: false, now });
+    const outOfRange = await upsertFromResult(
+      db,
+      result({ isbn: '9789137138473', title: 'Out of range' }),
+      { inRange: false, notify: true, now: later },
+    );
+    const notSten = await upsertFromResult(
+      db,
+      result({ isbn: '9789129688313', title: 'Mio, min Mio' }),
+      watchInRange,
+    );
+    await linkListenerBook(db, {
+      listenerId: sten.id,
+      bookId: seeded.book.id,
+      foundDuringSeed: true,
+      now,
+    });
+    await linkListenerBook(db, {
+      listenerId: sten.id,
+      bookId: outOfRange.book.id,
+      foundDuringSeed: false,
+      now: later,
+    });
+    await linkListenerBook(db, {
+      listenerId: other.id,
+      bookId: notSten.book.id,
+      foundDuringSeed: false,
+      now,
+    });
+    await setStatus(db, [seeded.book.id], 'read');
+
+    const books = await listListenerBooks(db, sten.id);
+
+    expect(
+      books.map((book) => [book.title, book.status, book.foundDuringSeed, book.listeners]),
+    ).toEqual([
+      ['Out of range', 'new', false, [{ id: sten.id, name: 'Viveca Sten' }]],
+      ['I stundens hetta', 'read', true, [{ id: sten.id, name: 'Viveca Sten' }]],
+    ]);
   });
 });

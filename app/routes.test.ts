@@ -18,6 +18,7 @@ describe('routes', () => {
       expect.arrayContaining([
         expect.objectContaining({ path: 'listeners', file: 'routes/listeners.tsx' }),
         expect.objectContaining({ path: 'listeners/new', file: 'routes/listenerForm.tsx' }),
+        expect.objectContaining({ path: 'listeners/:id', file: 'routes/listenerDetail.tsx' }),
         expect.objectContaining({ path: 'listeners/:id/edit', file: 'routes/listenerForm.tsx' }),
       ]),
     );

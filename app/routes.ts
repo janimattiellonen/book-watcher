@@ -9,5 +9,6 @@ export default [
   route('listeners', 'routes/listeners.tsx'),
   // One form module serves both; distinct ids keep the two routes apart.
   route('listeners/new', 'routes/listenerForm.tsx', { id: 'listener-new' }),
+  route('listeners/:id', 'routes/listenerDetail.tsx'),
   route('listeners/:id/edit', 'routes/listenerForm.tsx', { id: 'listener-edit' }),
 ] satisfies RouteConfig;

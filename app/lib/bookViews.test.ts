@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { parseListenerFilter, parseStatusChange, viewForParam } from './bookViews';
+import { bookStatusLabel, parseListenerFilter, parseStatusChange, viewForParam } from './bookViews';
 
 function form(entries: [string, string][]): FormData {
   const formData = new FormData();
@@ -16,6 +16,15 @@ describe('viewForParam', () => {
     expect(viewForParam('rejected')?.status).toBe('rejected');
     expect(viewForParam('new')).toBeUndefined();
     expect(viewForParam('elsewhere')).toBeUndefined();
+  });
+});
+
+describe('bookStatusLabel', () => {
+  it('tells a suggestion from a book never seen in range', () => {
+    const eligibleAt = new Date();
+    expect(bookStatusLabel({ status: 'new', eligibleAt })).toBe('Suggestion');
+    expect(bookStatusLabel({ status: 'new', eligibleAt: null })).toBe('Not in price range');
+    expect(bookStatusLabel({ status: 'accepted', eligibleAt })).toBe('On reading list');
   });
 });
 

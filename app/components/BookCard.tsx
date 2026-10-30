@@ -1,4 +1,5 @@
-import type { ReactNode } from 'react';
+import { Fragment, type ReactNode } from 'react';
+import { Link } from 'react-router';
 
 import type { BookListItem } from '../../src/db/books';
 import { formatPrice } from '../../src/notifications/digest';
@@ -48,12 +49,26 @@ export function BookCard({
         </ul>
         <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
           {[
-            book.listeners.length > 0 ? book.listeners.map((l) => l.name).join(', ') : null,
+            book.listeners.length > 0
+              ? book.listeners.map((listener, index) => (
+                  <Fragment key={listener.id}>
+                    {index > 0 ? ', ' : null}
+                    <Link to={`/listeners/${listener.id}`} className="hover:underline">
+                      {listener.name}
+                    </Link>
+                  </Fragment>
+                ))
+              : null,
             book.publishedDate ? `Published ${date.format(new Date(book.publishedDate))}` : null,
             dateLabel,
           ]
             .filter(Boolean)
-            .join(' · ')}
+            .map((part, index) => (
+              <Fragment key={index}>
+                {index > 0 ? ' · ' : null}
+                {part}
+              </Fragment>
+            ))}
         </p>
         {children ? <div className="mt-2">{children}</div> : null}
       </div>

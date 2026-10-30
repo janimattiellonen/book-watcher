@@ -1,4 +1,4 @@
-import { BOOK_STATUSES, type BookStatus } from '../../src/db/books';
+import { type Book, BOOK_STATUSES, type BookStatus } from '../../src/db/books';
 
 export interface BookView {
   status: BookStatus;
@@ -40,6 +40,21 @@ export const STATUS_ACTIONS: Record<BookStatus, string> = {
   read: 'Mark as read',
   rejected: 'Reject',
 };
+
+/** Where a book is, for pages that list books in any status. */
+export function bookStatusLabel(book: Pick<Book, 'status' | 'eligibleAt'>): string {
+  switch (book.status) {
+    case 'new':
+      // Never seen in range, so it was never a suggestion (spec: price range).
+      return book.eligibleAt ? 'Suggestion' : 'Not in price range';
+    case 'accepted':
+      return 'On reading list';
+    case 'read':
+      return 'Read';
+    case 'rejected':
+      return 'Rejected';
+  }
+}
 
 /** `?listener=<id>`; anything else means no filter. */
 export function parseListenerFilter(searchParams: URLSearchParams): number | undefined {
