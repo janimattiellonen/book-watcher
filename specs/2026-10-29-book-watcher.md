@@ -149,7 +149,8 @@ spread over the day.
   `--force` overrides the rules for debugging.
 - **Capacity:** with the defaults, about 40 listeners fit in a day. The
   listeners page shows each listener's last and next expected run, and warns
-  when the number of enabled listeners × average gap exceeds 24 hours.
+  when the number of enabled listeners × average gap exceeds
+  `LISTENER_INTERVAL_HOURS` (24 hours by default).
 - Runs never overlap. A wake-up during a run does nothing.
 - The scheduler and manual runs share one lock (a Postgres advisory lock), so a
   manual run can't overlap a scheduled one either.
