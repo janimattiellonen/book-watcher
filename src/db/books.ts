@@ -22,6 +22,9 @@ export interface Book {
   eligibleAt: Date | null;
   notifyPending: boolean;
   notifiedAt: Date | null;
+  seriesId: number | null;
+  /** The book's number in its series; null without a series, or when the store gave none. */
+  seriesPart: number | null;
 }
 
 interface BookRow {
@@ -40,6 +43,8 @@ interface BookRow {
   eligible_at: Date | null;
   notify_pending: boolean;
   notified_at: Date | null;
+  series_id: number | null;
+  series_part: number | null;
 }
 
 function toBook(row: BookRow): Book {
@@ -59,6 +64,8 @@ function toBook(row: BookRow): Book {
     eligibleAt: row.eligible_at,
     notifyPending: row.notify_pending,
     notifiedAt: row.notified_at,
+    seriesId: row.series_id,
+    seriesPart: row.series_part,
   };
 }
 
@@ -168,9 +175,16 @@ export interface BookListItem extends Book {
   offers: Offer[];
   /** The listeners that found the book, ordered by name. */
   listeners: { id: number; name: string }[];
+  series: BookSeries | null;
 }
 
-/** A book row `b` with its offers and listeners, as `BookListItem` expects them. */
+export interface BookSeries {
+  id: number;
+  name: string;
+  part: number | null;
+}
+
+/** A book row `b` with its offers, listeners and series, as `BookListItem` expects them. */
 const BOOK_LIST_COLUMNS = `b.*,
   COALESCE((
     SELECT json_agg(json_build_object(
@@ -183,25 +197,44 @@ const BOOK_LIST_COLUMNS = `b.*,
     SELECT json_agg(json_build_object('id', l.id, 'name', l.name) ORDER BY lower(l.name), l.id)
     FROM listener_books lb JOIN listeners l ON l.id = lb.listener_id
     WHERE lb.book_id = b.id
-  ), '[]') AS listeners`;
+  ), '[]') AS listeners,
+  (SELECT s.name FROM series s WHERE s.id = b.series_id) AS series_name`;
 
-type BookListRow = BookRow & { offers: Offer[]; listeners: { id: number; name: string }[] };
+type BookListRow = BookRow & {
+  offers: Offer[];
+  listeners: { id: number; name: string }[];
+  series_name: string | null;
+};
+
+function toBookListItem(row: BookListRow): BookListItem {
+  return {
+    ...toBook(row),
+    offers: row.offers,
+    listeners: row.listeners,
+    series:
+      row.series_id !== null && row.series_name !== null
+        ? { id: row.series_id, name: row.series_name, part: row.series_part }
+        : null,
+  };
+}
 
 export interface BookListFilter {
   status: BookStatus;
   listenerId?: number;
   /** Only books queued for the digest. */
   queued?: boolean;
+  seriesId?: number;
 }
 
 /**
- * The books in one status, optionally only those one listener found. Suggestions
+ * The books in one status, optionally only those one listener found or in one series
+ * (or both). Suggestions
  * (`new`) leave out books never seen in range and are ordered by when they became
  * suggestions; the other views by when the book was last moved, newest first.
  */
 export async function listBooks(
   db: Queryable,
-  { status, listenerId, queued = false }: BookListFilter,
+  { status, listenerId, queued = false, seriesId }: BookListFilter,
 ): Promise<BookListItem[]> {
   const { rows } = await db.query<BookListRow>(
     `SELECT ${BOOK_LIST_COLUMNS}
@@ -212,11 +245,27 @@ export async function listBooks(
          SELECT 1 FROM listener_books lb WHERE lb.book_id = b.id AND lb.listener_id = $2
        ))
        AND (NOT $3::boolean OR b.notify_pending)
+       AND ($4::bigint IS NULL OR b.series_id = $4)
      ORDER BY CASE WHEN $1 = 'new' THEN b.eligible_at ELSE b.status_changed_at END DESC NULLS LAST,
               b.id DESC`,
-    [status, listenerId ?? null, queued],
+    [status, listenerId ?? null, queued, seriesId ?? null],
   );
-  return rows.map((row) => ({ ...toBook(row), offers: row.offers, listeners: row.listeners }));
+  return rows.map(toBookListItem);
+}
+
+/**
+ * Every book in one series, in any status, in part order. Books without a part come
+ * last, by title.
+ */
+export async function listSeriesBooks(db: Queryable, seriesId: number): Promise<BookListItem[]> {
+  const { rows } = await db.query<BookListRow>(
+    `SELECT ${BOOK_LIST_COLUMNS}
+     FROM books b
+     WHERE b.series_id = $1
+     ORDER BY b.series_part NULLS LAST, lower(b.title), b.id`,
+    [seriesId],
+  );
+  return rows.map(toBookListItem);
 }
 
 export interface ListenerBook extends BookListItem {
@@ -239,12 +288,7 @@ export async function listListenerBooks(
      ORDER BY link.first_seen_at DESC, b.id DESC`,
     [listenerId],
   );
-  return rows.map((row) => ({
-    ...toBook(row),
-    offers: row.offers,
-    listeners: row.listeners,
-    foundDuringSeed: row.found_during_seed,
-  }));
+  return rows.map((row) => ({ ...toBookListItem(row), foundDuringSeed: row.found_during_seed }));
 }
 
 /** Takes books off the digest queue once a digest containing them went out. */
