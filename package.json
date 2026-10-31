@@ -9,7 +9,7 @@
     "dev": "react-router dev",
     "build": "react-router build",
     "start": "PORT=3192 react-router-serve ./build/server/index.js",
-    "lint": "eslint .",
+    "lint": "react-router typegen && eslint .",
     "lint:fix": "eslint . --fix",
     "format": "prettier --check .",
     "format:fix": "prettier --write .",

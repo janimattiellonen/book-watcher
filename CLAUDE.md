@@ -6,8 +6,6 @@ Setup and usage are in README.md; the design is in `specs/`, the build plan in `
 
 - Run `npm run check` before every commit, and `npm run test:db` when code touching
   the database changed.
-- After adding a route, run `npx react-router typegen` first: lint runs before the
-  typecheck regenerates the `+types` files, so it fails on the missing imports.
 
 ## Database
 
