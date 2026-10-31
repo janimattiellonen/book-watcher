@@ -132,11 +132,11 @@ defaults. The rate limits:
 | `MAX_PAGES_PER_SEARCH`    | 10      | Result pages loaded per store in one search                            |
 | `SEK_TO_EUR`              | 0.087   | Euros per Swedish krona, for Bokus prices                              |
 
-With the defaults every listener takes at least 35 minutes (the 30-minute gap plus 5
-minutes of average jitter), so about 40 listeners fit in a day, and fewer once the time
-the searches themselves take is counted. When there are
-more than fit in `LISTENER_INTERVAL_HOURS`, the Listeners page says so. Lower
-`MIN_GAP_MINUTES` or follow fewer authors.
+With the defaults the gap after each listener averages 35 minutes (the 30-minute gap plus
+5 minutes of average jitter), so about 40 listeners fit in a day, and fewer once the time
+the searches themselves take is counted. When there are more than fit in
+`LISTENER_INTERVAL_HOURS`, the Listeners page says so. Lower `MIN_GAP_MINUTES` or follow
+fewer authors.
 
 Restart the scheduler and the website after changing `.env`.
 
