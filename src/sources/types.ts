@@ -40,6 +40,13 @@ export const searchResultSchema = z.object({
   currency: z.enum(['EUR', 'SEK']),
   url: z.url(),
   coverUrl: z.url().nullable(),
+  /**
+   * The book's series and part, when the results page shows it. Bokus cards do; Adlibris
+   * cards never do, so its results carry null and rely on a book-page lookup.
+   */
+  series: z
+    .object({ name: z.string().min(1), part: z.number().nonnegative().nullable() })
+    .nullable(),
 });
 export type SearchResult = z.infer<typeof searchResultSchema>;
 

@@ -69,6 +69,9 @@ console.table(
     format: result.format,
     lang: result.language,
     price: result.price === null ? null : `${result.price} ${result.currency}`,
+    series: result.series
+      ? `${result.series.part === null ? '' : `${result.series.part}. `}${result.series.name}`
+      : null,
     url: result.url,
   })),
 );

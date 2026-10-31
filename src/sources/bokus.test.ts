@@ -42,7 +42,22 @@ describe('parseBokus', () => {
         currency: 'SEK',
         url: 'https://www.bokus.com/bok/9789137161839/fordrivaren',
         coverUrl: 'https://image.bokus.com/images2/9789137161839_766',
+        series: { name: 'Åremorden', part: 7 },
       });
+    });
+
+    it('reads the series of every labelled card, and none for the rest', () => {
+      const parts = new Map<string, number[]>();
+      for (const { series } of page.results) {
+        if (series) parts.set(series.name, [...(parts.get(series.name) ?? []), series.part ?? -1]);
+      }
+      const sorted = (name: string) => (parts.get(name) ?? []).sort((a, b) => a - b);
+      const range = (count: number) => Array.from({ length: count }, (_, index) => index + 1);
+      expect([...parts.keys()].sort()).toEqual(['Havsfolket', 'Morden i Sandhamn', 'Åremorden']);
+      expect(sorted('Morden i Sandhamn')).toEqual(range(11));
+      expect(sorted('Åremorden')).toEqual(range(7));
+      expect(sorted('Havsfolket')).toEqual(range(3));
+      expect(page.results.filter((result) => result.series === null)).toHaveLength(6);
     });
 
     it('gives every result an ISBN, a price and a unique URL', () => {
@@ -70,6 +85,17 @@ describe('parseBokus', () => {
       expect(page.results).toHaveLength(60);
       expect(new Set(page.results.map((result) => result.isbn)).size).toBe(60);
       expect(page.hasMore).toBe(true);
+    });
+
+    it('reads series labels and decodes their entities', () => {
+      const page = parseBokus(fixture('search-astrid-lindgren-sv-ebook-more-1.html'));
+      const series = page.results.flatMap((result) => (result.series ? [result.series] : []));
+      expect(series).toEqual(
+        expect.arrayContaining([
+          { name: 'Dunne', part: 2 },
+          { name: 'Johnny & Co', part: 1 },
+        ]),
+      );
     });
 
     it('reads every author of a book', () => {

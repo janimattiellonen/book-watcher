@@ -39,6 +39,7 @@ function book(isbn: string, overrides: Partial<SearchResult> = {}): SearchResult
     currency: 'SEK',
     url: `https://www.bokus.com/bok/${isbn}/`,
     coverUrl: null,
+    series: null,
     ...overrides,
   };
 }
