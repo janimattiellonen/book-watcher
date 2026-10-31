@@ -9,8 +9,8 @@ It runs on your own Mac. There are two parts:
 - **The website** (`localhost:3192`), where you add the authors you want to follow and
   go through the books found for them.
 - **The scheduler**, which runs in a terminal and searches the stores. Each author is
-  searched at most once a day, and searches are spread out, so the stores see a few
-  requests an hour at most.
+  searched at most once a day, and runs are spread out, at least half an hour apart. A
+  run makes one request per result page, so a long back catalogue means several requests.
 
 The design is in [`specs/2026-10-29-book-watcher.md`](specs/2026-10-29-book-watcher.md)
 and the build plan in [`plans/2026-10-29-book-watcher-plan.md`](plans/2026-10-29-book-watcher-plan.md).
@@ -113,9 +113,11 @@ To check the e-mail settings:
 npm run test-email   # sends one test e-mail, even when notifications are off or mocked
 ```
 
-`npm run digest -- --force` sends the digest right away. With `EMAIL_MOCK_MODE=true` it
-prints the e-mail instead of sending it. Either way it counts as that day's digest, and
-the books in it won't be e-mailed again.
+`npm run digest -- --force` sends the digest right away, skipping the once-a-day rule. It
+still needs `EMAIL_NOTIFICATIONS_ENABLED=true`; with that off it sends nothing. With
+`EMAIL_MOCK_MODE=true` it prints the e-mail instead of sending it. The books in it are
+taken off the queue and won't be e-mailed again. It counts as that day's digest only if
+the day had no completed digest yet; otherwise it isn't recorded as a second one.
 
 ## Settings
 
@@ -130,7 +132,9 @@ defaults. The rate limits:
 | `MAX_PAGES_PER_SEARCH`    | 10      | Result pages loaded per store in one search                            |
 | `SEK_TO_EUR`              | 0.087   | Euros per Swedish krona, for Bokus prices                              |
 
-With the defaults the scheduler gets through roughly 30 listeners a day. When there are
+With the defaults every listener takes at least 35 minutes (the 30-minute gap plus 5
+minutes of average jitter), so about 40 listeners fit in a day, and fewer once the time
+the searches themselves take is counted. When there are
 more than fit in `LISTENER_INTERVAL_HOURS`, the Listeners page says so. Lower
 `MIN_GAP_MINUTES` or follow fewer authors.
 
@@ -155,7 +159,7 @@ pages in `tests/fixtures/<store>/`. Save a fresh one, update the parser and the 
 and log the capture in that folder's `CAPTURES.md` (the capture script does that):
 
 ```bash
-npm run capture -- --source bokus --author "Viveca Sten" --language sv
+npm run capture -- --source bokus --author "<author>" --language sv --name <slug>
 npm run search -- --source bokus --fixture tests/fixtures/bokus/<file>.html
 ```
 
