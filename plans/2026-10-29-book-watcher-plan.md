@@ -513,6 +513,46 @@ Then do a final pass through the spec's success criteria.
 
 **Estimated scope:** S
 
+**Final verification (2026-10-31):**
+
+- README walk-through: a fresh clone, then `npm ci`, `npx playwright install chromium`,
+  `cp .env.example .env`, `db:migrate`, `check` and `test:db`. It found one bug:
+  `check` failed because lint ran before the route types were generated. Fixed in
+  the `lint` script. `db:up` was not repeated, because the compose file's fixed
+  container name would clash with the running Postgres.
+- `npm run check`: 120 tests pass. `npm run test:db`: 80 tests pass.
+
+The spec's success criteria:
+
+1. **Schema.** All 7 migrations went down one by one on `book_watcher_test`, leaving
+   no tables and no `pgmigrations` rows, and back up with `db:migrate`.
+2. **Search.** The spec's command needs `--live`, so that a live request is always
+   asked for explicitly; the spec now says so. Live runs were logged in each store's
+   `CAPTURES.md` during T4/T5. On the saved pages, Bokus "Viveca Sten" parses 27
+   results and Adlibris "Heikki Hietala" 4 of 4, each with title, authors, ISBN, price
+   and URL. The script didn't print the URL before; it now does.
+3. **Seed.** You created the "Viveca Sten" listener on the website and seeded it live
+   (2026-10-30): Adlibris 64 results, Bokus 27, both `ok`, and the listener went
+   active. It recorded 24 books, with nothing queued (`notify_pending` 0) and no
+   `notifications` rows. The seed's no-queue rule is in
+   `books.dbtest.ts`, "does not queue a book found during a seed".
+4. **Bulk marking.** 7 of the seeded books are now `read` and 17 `new`, marked from
+   the listener page. Tests: `bookViews.test.ts` "reads many books from a bulk form",
+   and `books.dbtest.ts` for the status changes.
+5. **Digest.** `sendDailyDigest.dbtest.ts` with a fake clock: it sends once a day at
+   or after `DIGEST_TIME`, notifies each book at most once, sends nothing on an empty
+   day, and does nothing while disabled, even when forced. `runListener.dbtest.ts`:
+   a watch run queues new books instead of e-mailing them. A real 05:00 digest is still
+   open (Checkpoint: Complete).
+6. **One card per book.** All 24 seeded books have two offers, one per store
+   (Bokus's 27 results added no new books). Test: `books.dbtest.ts`, "gives one book
+   found on two sources two offers".
+7. **Scheduler.** `schedulePolicy.test.ts` runs a fake clock over three days: at most
+   one run per listener a day, and never closer than the gap. `tick.test.ts` covers the
+   gap between two due listeners and the run lock. Every run is a `runs` row, shown
+   on `/runs`.
+8. **`npm run check`** passes, as above.
+
 ### Checkpoint: Complete
 
 - [ ] All the spec's success criteria are met.

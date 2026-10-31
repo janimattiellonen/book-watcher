@@ -467,8 +467,8 @@ export async function recordResults(
 
 1. `npm run db:up && npm run db:migrate` creates the schema on Postgres 17 at
    `localhost:5499`, and `db:migrate:down` reverses it.
-2. `npm run search -- --source bokus --author "Viveca Sten" --language sv` and
-   the Adlibris equivalent (`--author "Heikki Hietala" --language fi`) print
+2. `npm run search -- --source bokus --author "Viveca Sten" --language sv --live`
+   and the Adlibris equivalent (`--author "Heikki Hietala" --language fi`) print
    parsed e-book results with title, authors, ISBN, price and URL.
 3. Creating a listener on `localhost:3192` and running the seed records all of
    that author's matching e-books from both sources as `new` suggestions, with no
