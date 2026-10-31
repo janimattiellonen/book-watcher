@@ -4,9 +4,11 @@
  *
  *   npm run capture -- --source bokus --author "Viveca Sten" --language sv
  *     [--name slug] [--url exact-url] [--load-more N] [--purpose "why"] [--overwrite]
+ *   npm run capture -- --source adlibris --book --url <book page url> --name book-<slug>
  *
  * Writes tests/fixtures/<source>/<slug>.html (+ .png), and <slug>-more-<k>.html after
- * each "load more", then logs every request it made in CAPTURES.md.
+ * each "load more", then logs every request it made in CAPTURES.md. `--book` saves a
+ * single book page instead, for the series lookup: one request, no search wait.
  */
 import { appendFileSync, existsSync, writeFileSync } from 'node:fs';
 import { parseArgs } from 'node:util';
@@ -25,25 +27,28 @@ const { values } = parseArgs({
     'load-more': { type: 'string', default: '0' },
     purpose: { type: 'string', default: '' },
     overwrite: { type: 'boolean', default: false },
+    book: { type: 'boolean', default: false },
   },
 });
 
-if (!values.source || !SOURCE_IDS.includes(values.source as SourceId) || !values.author) {
+const usable = values.book ? values.url && values.name : values.author;
+if (!values.source || !SOURCE_IDS.includes(values.source as SourceId) || !usable) {
   console.error(
-    'Usage: capture --source <adlibris|bokus> --author <name> --language <code> [--name slug] [--load-more N] [--purpose text] [--overwrite]',
+    'Usage: capture --source <adlibris|bokus> --author <name> --language <code> [--name slug] [--load-more N] [--purpose text] [--overwrite]\n' +
+      '       capture --source <adlibris|bokus> --book --url <book page url> --name <slug> [--purpose text] [--overwrite]',
   );
   process.exit(1);
 }
 
 const source = sources[values.source as SourceId];
 const query = {
-  author: values.author,
+  author: values.author ?? '',
   language: values.language ?? 'fi',
   format: 'ebook' as const,
 };
 const slug =
   values.name ??
-  `search-${values.author.toLowerCase().replace(/[^a-z0-9]+/g, '-')}-${query.language}-ebook`;
+  `search-${query.author.toLowerCase().replace(/[^a-z0-9]+/g, '-')}-${query.language}-ebook`;
 const dir = new URL(`../../tests/fixtures/${source.id}/`, import.meta.url);
 const htmlFile = new URL(`${slug}.html`, dir);
 
@@ -61,14 +66,16 @@ const browser = await launchBrowser();
 try {
   const page = await newPage(browser, source.locale);
   await openPage(page, url);
-  await source.waitUntilReady(page);
+  // A book page has no search filters to wait for; openPage has already let it settle.
+  if (!values.book) await source.waitUntilReady(page);
   const html = await page.content();
   writeFileSync(htmlFile, html);
   await page.screenshot({ path: new URL(`${slug}.png`, dir).pathname });
-  log.push(`| ${today} | ${url} | \`${slug}.html\` | ${values.purpose || 'search results'} |`);
+  const purpose = values.purpose || (values.book ? 'book page' : 'search results');
+  log.push(`| ${today} | ${url} | \`${slug}.html\` | ${purpose} |`);
   console.log(`Saved ${slug}.html (${html.length} bytes)`);
 
-  for (let k = 1; k <= loadMore; k++) {
+  for (let k = 1; !values.book && k <= loadMore; k++) {
     if (!source.parse(await page.content()).hasMore) {
       console.log('No more results to load.');
       break;

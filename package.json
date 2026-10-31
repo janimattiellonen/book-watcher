@@ -26,6 +26,7 @@
     "test:db": "POSTGRES_DB=book_watcher_test tsx --env-file-if-exists=.env src/scripts/migrate.ts up && POSTGRES_DB=book_watcher_test vitest run --config vitest.db.config.ts --passWithNoTests",
     "capture": "tsx --env-file-if-exists=.env src/scripts/capture.ts",
     "search": "tsx --env-file-if-exists=.env src/scripts/search.ts",
+    "series-lookup": "tsx --env-file-if-exists=.env src/scripts/seriesLookup.ts",
     "run-listener": "tsx --env-file-if-exists=.env src/scripts/runListener.ts",
     "digest": "tsx --env-file-if-exists=.env src/scripts/digest.ts",
     "test-email": "tsx --env-file-if-exists=.env src/scripts/testEmail.ts",
