@@ -178,7 +178,7 @@ ALTER TABLE books
   ADD COLUMN series_part       numeric(6,2),
   ADD COLUMN series_source     text,
   ADD COLUMN series_checked_at timestamptz,      -- last successful Adlibris lookup
-  ADD CONSTRAINT fk_books_series FOREIGN KEY (series_id) REFERENCES series (id) ON DELETE SET NULL,
+  ADD CONSTRAINT fk_books_series FOREIGN KEY (series_id) REFERENCES series (id),
   ADD CONSTRAINT ck_books_series_source CHECK (series_source IN ('adlibris', 'bokus')),
   ADD CONSTRAINT ck_books_series_consistent
     CHECK ((series_id IS NULL) = (series_source IS NULL)
