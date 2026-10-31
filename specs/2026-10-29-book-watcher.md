@@ -341,7 +341,7 @@ npm run start            # serve the production build on :3192
 
 npm run scheduler        # long-running scheduler (rate-limited, see US-6)
 npm run run-listener -- --listener <id> [--force]   # run (or seed) one listener now, rate limits apply
-npm run search -- --source bokus --author "Viveca Sten" --language sv   # debug: print parsed results, no DB writes
+npm run search -- --source bokus --author "Viveca Sten" --language sv --live   # debug: print parsed results, no DB writes; --live is opt-in, one real request
 npm run digest -- [--force]   # send today's digest now (once-a-day rule applies unless --force)
 npm run test-email       # send a test e-mail
 
