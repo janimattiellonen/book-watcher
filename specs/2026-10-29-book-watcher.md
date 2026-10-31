@@ -341,7 +341,7 @@ npm run start            # serve the production build on :3192
 
 npm run scheduler        # long-running scheduler (rate-limited, see US-6)
 npm run run-listener -- --listener <id> [--force]   # run (or seed) one listener now, rate limits apply
-npm run search -- --source bokus --author "Viveca Sten" --language sv   # debug: print parsed results, no DB writes
+npm run search -- --source bokus --author "Viveca Sten" --language sv --live   # debug: print parsed results, no DB writes; --live is opt-in, one real request
 npm run digest -- [--force]   # send today's digest now (once-a-day rule applies unless --force)
 npm run test-email       # send a test e-mail
 
@@ -467,8 +467,8 @@ export async function recordResults(
 
 1. `npm run db:up && npm run db:migrate` creates the schema on Postgres 17 at
    `localhost:5499`, and `db:migrate:down` reverses it.
-2. `npm run search -- --source bokus --author "Viveca Sten" --language sv` and
-   the Adlibris equivalent (`--author "Heikki Hietala" --language fi`) print
+2. `npm run search -- --source bokus --author "Viveca Sten" --language sv --live`
+   and the Adlibris equivalent (`--author "Heikki Hietala" --language fi`) print
    parsed e-book results with title, authors, ISBN, price and URL.
 3. Creating a listener on `localhost:3192` and running the seed records all of
    that author's matching e-books from both sources as `new` suggestions, with no

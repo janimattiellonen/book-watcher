@@ -69,6 +69,7 @@ console.table(
     format: result.format,
     lang: result.language,
     price: result.price === null ? null : `${result.price} ${result.currency}`,
+    url: result.url,
   })),
 );
 console.log(
