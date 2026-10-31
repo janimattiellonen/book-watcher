@@ -102,7 +102,7 @@ The down migration deletes `kind = 'series'` runs, then reverses everything.
 - `seriesNameKey`:
   - case-fold, trim and collapse whitespace;
   - strip a trailing `-serien`, ` serien`, `-sarja` or ` sarja`;
-  - decode HTML entities.
+  - entities are decoded by cheerio before the label gets here (checked in T3).
 - `seriesAuthorKey`: the book's first author, through the existing `normalizeName`.
 
 Part numbers are parsed as numbers: `01` is 1, and `2.5` or `2,5` is 2.5.
@@ -112,7 +112,6 @@ Part numbers are parsed as numbers: `01` is 1, and `2.5` or `2,5` is 2.5.
 - [ ] `Del 7 - Åremorden` gives `{ name: 'Åremorden', part: 7 }`.
 - [ ] `Hildur-serien (osa 01)` gives `{ name: 'Hildur-serien', part: 1 }`.
 - [ ] "Hildur-serien" and "Hildur" give the same name key.
-- [ ] `Johnny &amp; Co` decodes to "Johnny & Co".
 - [ ] The same name by two authors gives two different `(author_key, name_key)`
       pairs.
 
@@ -139,7 +138,8 @@ new `SearchResult.series` field, and `parseAdlibris` sets it to `null`.
 
   The other 6 have `null`. (Spec success criterion 2.)
 
-- [ ] The Astrid Lindgren fixtures give "Dunne" part 2 and "Johnny & Co" part 1.
+- [ ] The Astrid Lindgren fixtures give "Dunne" part 2 and "Johnny & Co" part 1. The
+      fixture has `Johnny &amp; Co`, so this also checks that entities are decoded.
 - [ ] All existing parser tests still pass.
 
 **Verification:** `npm test -- bokus adlibris`, plus `npm run search -- --source bokus --fixture …`
