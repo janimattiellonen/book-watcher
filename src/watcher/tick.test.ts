@@ -32,6 +32,7 @@ const summary: RunSummary = {
   kind: 'watch',
   sources: [{ source: 'bokus', status: 'ok', results: 1, newBooks: 0, error: null }],
   activated: false,
+  seriesLookup: null,
 };
 
 /** A world of fake listeners, a fake clock, a fake lock and runs that end when told to. */

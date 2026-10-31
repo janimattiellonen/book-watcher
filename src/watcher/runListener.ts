@@ -8,8 +8,10 @@ import {
   type RunOutcome,
   startRun,
 } from '../db/runs.js';
+import { applyBookSeries } from '../db/series.js';
 import type { SearchQuery, SearchResult, SourceId } from '../sources/types.js';
 import { inPriceRange, isListenersBook, toEur } from './matching.js';
+import { type LoadBookPage, lookupSeries, type SeriesLookupSummary } from './seriesLookup.js';
 
 export interface SourceSearchResult {
   results: SearchResult[];
@@ -28,6 +30,10 @@ export interface RunDeps {
   pause: () => Promise<void>;
   sekToEur: number;
   log: (message: string) => void;
+  /** Loads an Adlibris book page for the series lookups. */
+  loadBookPage: LoadBookPage;
+  /** Book pages loaded per run at most; 0 turns the lookups off. */
+  maxSeriesLookups: number;
 }
 
 export interface SourceRunSummary {
@@ -43,6 +49,8 @@ export interface RunSummary {
   sources: SourceRunSummary[];
   /** The seed succeeded on every source and the listener is now active. */
   activated: boolean;
+  /** The Adlibris series lookups after the searches; null when none were made. */
+  seriesLookup: SeriesLookupSummary | null;
 }
 
 /**
@@ -50,12 +58,15 @@ export interface RunSummary {
  * searched in turn and recorded as its own `runs` row. A seed records books silently;
  * a watch run queues new suggestions for the digest. The listener becomes active only
  * if the seed succeeded on every source, and `last_run_at` is set whatever happened.
- * Never sends e-mail and never changes a book's status.
+ * Then, if this run's Adlibris search went well, it looks up the series of the
+ * listener's Adlibris books that still lack one (series spec US-S2). The lookups never
+ * decide the seed's outcome. Never sends e-mail and never changes a book's status.
  */
 export async function runListener(deps: RunDeps, listener: Listener): Promise<RunSummary> {
   const kind: RunKind = listener.seedState === 'pending' ? 'seed' : 'watch';
   const summaries: SourceRunSummary[] = [];
   let activated = false;
+  let seriesLookup: SeriesLookupSummary | null = null;
 
   try {
     for (const [index, source] of listener.sources.entries()) {
@@ -67,11 +78,16 @@ export async function runListener(deps: RunDeps, listener: Listener): Promise<Ru
       await activateListener(deps.db, listener.id, deps.now());
       activated = true;
     }
+
+    // A blocked or failing Adlibris search makes book pages pointless, and impolite.
+    if (summaries.some((summary) => summary.source === 'adlibris' && summary.status === 'ok')) {
+      seriesLookup = await lookupSeries({ ...deps, maxLookups: deps.maxSeriesLookups }, listener);
+    }
   } finally {
     await setLastRunAt(deps.db, listener.id, deps.now());
   }
 
-  return { kind, sources: summaries, activated };
+  return { kind, sources: summaries, activated, seriesLookup };
 }
 
 async function runSource(
@@ -166,6 +182,15 @@ async function recordResults(
         foundDuringSeed: kind === 'seed',
         now,
       });
+      // Bokus cards name the series; it applies to new and known books alike (US-S1).
+      if (result.series) {
+        await applyBookSeries(client, {
+          bookId: book.id,
+          authors: book.authors,
+          series: result.series,
+          source: result.source,
+        });
+      }
     }
     await client.query('COMMIT');
     return newBooks;
