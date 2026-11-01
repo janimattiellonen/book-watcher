@@ -266,27 +266,30 @@ describe('Adlibris series lookups in listener runs', () => {
     expect(log.some((line) => line.includes('series lookup: stopped'))).toBe(true);
   });
 
-  it('stops at any other error too, but skips a page that is not the expected book', async () => {
+  it('skips a page that fails or is not the expected book, and goes on with the rest', async () => {
     const listener = await createListener(db, listenerInput);
     const isbns = ['9789137000001', '9789137000002', '9789137000003', '9789137000004'];
-    const { loaded, summary } = await run(listener, {
+    const { loaded, summary, log } = await run(listener, {
       searches: { adlibris: isbns.map((isbn) => result('adlibris', isbn)) },
       pages: {
         // Newest first: 004 is loaded first.
         [urlOf('9789137000004')]: new UnexpectedPageError('not a book page'),
         [urlOf('9789137000003')]: page('9789137999999', 'Wrong book', 1),
-        [urlOf('9789137000002')]: new Error('net::ERR_CONNECTION_RESET'),
+        [urlOf('9789137000002')]: new Error('page.goto: Timeout 30000ms exceeded'),
+        [urlOf('9789137000001')]: page('9789137000001', 'Hildur-serien', 1),
       },
     });
 
-    expect(loaded).toEqual([
-      urlOf('9789137000004'),
-      urlOf('9789137000003'),
-      urlOf('9789137000002'),
+    expect(loaded).toEqual([...isbns].reverse().map(urlOf));
+    expect(summary.seriesLookup).toEqual({ status: 'ok', pages: 4, found: 1, error: null });
+    // Only the page that was read successfully is marked; the others wait for a later run.
+    expect(await books()).toEqual([
+      expect.objectContaining({ isbn: '9789137000001', series: 'Hildur-serien', checked: true }),
+      expect.objectContaining({ isbn: '9789137000002', series: null, checked: false }),
+      expect.objectContaining({ isbn: '9789137000003', series: null, checked: false }),
+      expect.objectContaining({ isbn: '9789137000004', series: null, checked: false }),
     ]);
-    expect(summary.seriesLookup).toMatchObject({ status: 'failed', pages: 3, found: 0 });
-    // Nothing was read successfully, so every book waits for a later run.
-    expect((await books()).every((book) => !book.checked && book.series === null)).toBe(true);
+    expect(log.some((line) => line.includes('Timeout 30000ms exceeded'))).toBe(true);
   });
 
   it('never queues a book for the digest or changes its status', async () => {
