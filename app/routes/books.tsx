@@ -3,6 +3,7 @@ import { data, Form } from 'react-router';
 import { listBooks } from '../../src/db/books';
 import { listListeners } from '../../src/db/listeners';
 import { BookCard, formatDate } from '../components/BookCard';
+import { SeriesGroups } from '../components/SeriesGroups';
 import { StatusButtons } from '../components/StatusButtons';
 import { parseListenerFilter, viewForParam } from '../lib/bookViews';
 import { db } from '../lib/db.server';
@@ -71,19 +72,22 @@ export default function Books({ loaderData }: Route.ComponentProps) {
         </p>
       ) : (
         <div className="mt-4">
-          {books.map((book) => {
-            const at = view.status === 'new' ? book.eligibleAt : book.statusChangedAt;
-            const verb = view.status === 'new' ? 'Found' : 'Moved here';
-            return (
-              <BookCard
-                key={book.id}
-                book={book}
-                dateLabel={at ? `${verb} ${formatDate(at)}` : null}
-              >
-                <StatusButtons bookId={book.id} status={book.status} />
-              </BookCard>
-            );
-          })}
+          <SeriesGroups
+            books={books}
+            renderBook={(book) => {
+              const at = view.status === 'new' ? book.eligibleAt : book.statusChangedAt;
+              const verb = view.status === 'new' ? 'Found' : 'Moved here';
+              return (
+                <BookCard
+                  key={book.id}
+                  book={book}
+                  dateLabel={at ? `${verb} ${formatDate(at)}` : null}
+                >
+                  <StatusButtons bookId={book.id} status={book.status} />
+                </BookCard>
+              );
+            }}
+          />
         </div>
       )}
     </main>

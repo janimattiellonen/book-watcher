@@ -6,6 +6,7 @@ import { lastFinishedAt } from '../../src/db/runs';
 import { nextExpectedRuns } from '../../src/watcher/schedulePolicy';
 import { BookCard, formatDate } from '../components/BookCard';
 import { BulkStatusForm } from '../components/BulkStatusForm';
+import { SeriesGroups } from '../components/SeriesGroups';
 import { StatusButtons } from '../components/StatusButtons';
 import { bookStatusLabel } from '../lib/bookViews';
 import { config } from '../lib/config.server';
@@ -120,11 +121,14 @@ export default function ListenerDetail({ loaderData }: Route.ComponentProps) {
           <p className="mt-2 text-sm text-gray-600 dark:text-gray-400">None yet.</p>
         ) : (
           <div className="mt-2">
-            {later.map((book) => (
-              <BookCard key={book.id} book={book} dateLabel={describeBook(book)}>
-                <StatusButtons bookId={book.id} status={book.status} />
-              </BookCard>
-            ))}
+            <SeriesGroups
+              books={later}
+              renderBook={(book) => (
+                <BookCard key={book.id} book={book} dateLabel={describeBook(book)}>
+                  <StatusButtons bookId={book.id} status={book.status} />
+                </BookCard>
+              )}
+            />
           </div>
         )}
       </section>
