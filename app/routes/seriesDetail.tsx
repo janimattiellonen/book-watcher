@@ -4,7 +4,7 @@ import { listSeriesBooks } from '../../src/db/books';
 import { countWaitingLookups, getSeries } from '../../src/db/series';
 import { BookCard } from '../components/BookCard';
 import { StatusButtons } from '../components/StatusButtons';
-import { bookStatusLabel } from '../lib/bookViews';
+import { bookStatusLabel, parseRowId } from '../lib/bookViews';
 import { db } from '../lib/db.server';
 import { seriesGaps } from '../lib/seriesGaps';
 import type { Route } from './+types/seriesDetail';
@@ -15,7 +15,8 @@ export function meta({ loaderData }: Route.MetaArgs) {
 
 /** One series: its books in part order, its gaps, and what may still fill them (US-S4). */
 export async function loader({ params }: Route.LoaderArgs) {
-  const series = /^\d+$/.test(params.id) ? await getSeries(db, Number(params.id)) : null;
+  const id = parseRowId(params.id);
+  const series = id === undefined ? null : await getSeries(db, id);
   if (!series) throw data('Series not found', { status: 404 });
 
   const [books, waiting] = await Promise.all([

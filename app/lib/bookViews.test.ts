@@ -50,6 +50,14 @@ describe('parseSeriesFilter', () => {
     expect(parseListenerFilter(params)).toBe(12);
     expect(parseSeriesFilter(new URLSearchParams('series=x'))).toBeUndefined();
   });
+
+  it('ignores an id too large for a bigint, instead of sending it to the database', () => {
+    expect(parseSeriesFilter(new URLSearchParams('series=100000000000000000000'))).toBeUndefined();
+    expect(parseListenerFilter(new URLSearchParams('listener=9007199254740993'))).toBeUndefined();
+    expect(parseSeriesFilter(new URLSearchParams('series=9007199254740991'))).toBe(
+      9007199254740991,
+    );
+  });
 });
 
 describe('parseStatusChange', () => {

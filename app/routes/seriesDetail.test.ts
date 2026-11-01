@@ -42,6 +42,13 @@ describe('series page loader', () => {
     expect(getSeries).toHaveBeenCalledTimes(1);
   });
 
+  it('is a 404 for an id too large for a bigint, without querying', async () => {
+    await expect(loader(loaderArgs('100000000000000000000'))).rejects.toMatchObject({
+      init: { status: 404 },
+    });
+    expect(getSeries).not.toHaveBeenCalled();
+  });
+
   it('gives the gaps, the waiting lookups for the series author, and each listener once', async () => {
     const viveca = { id: 48, name: 'Viveca Sten' };
     const other = { id: 50, name: 'Other' };

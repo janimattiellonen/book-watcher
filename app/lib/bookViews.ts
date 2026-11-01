@@ -64,9 +64,18 @@ export const parseListenerFilter = (searchParams: URLSearchParams) =>
 export const parseSeriesFilter = (searchParams: URLSearchParams) =>
   parseIdFilter(searchParams, 'series');
 
+/**
+ * A row id from a URL: plain digits that a JS number holds exactly. A longer one is out of
+ * range for Postgres's bigint, so querying it would be a 500 rather than a 404.
+ */
+export function parseRowId(value: string | null | undefined): number | undefined {
+  if (!value || !/^\d+$/.test(value)) return undefined;
+  const id = Number(value);
+  return Number.isSafeInteger(id) ? id : undefined;
+}
+
 function parseIdFilter(searchParams: URLSearchParams, name: string): number | undefined {
-  const value = searchParams.get(name);
-  return value && /^\d+$/.test(value) ? Number(value) : undefined;
+  return parseRowId(searchParams.get(name));
 }
 
 export type StatusChange =
