@@ -1,3 +1,4 @@
+import { matchRoutes } from 'react-router';
 import { describe, expect, it } from 'vitest';
 
 import routes from './routes';
@@ -11,6 +12,15 @@ describe('routes', () => {
         expect.objectContaining({ path: 'books/status', file: 'routes/bookStatus.ts' }),
       ]),
     );
+  });
+
+  it('serves /series and a series page, not the book view route', () => {
+    // React Router's own matcher, given the config's paths; the route id carries the file.
+    const objects = routes.map((entry) => ({ path: entry.path ?? '', id: entry.file }));
+    const fileFor = (path: string) => matchRoutes(objects, path)?.at(-1)?.route.id;
+    expect(fileFor('/series')).toBe('routes/series.tsx');
+    expect(fileFor('/series/3')).toBe('routes/seriesDetail.tsx');
+    expect(fileFor('/read')).toBe('routes/books.tsx');
   });
 
   it('serves the listener pages', () => {

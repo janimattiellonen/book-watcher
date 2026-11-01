@@ -41,6 +41,7 @@ describe('parseAdlibris', () => {
         currency: 'EUR',
         url: 'https://www.adlibris.com/fi/kirja/tuhkat-9789527343944',
         coverUrl: 'https://media.adlibris.com/images/9789527343944/tuhkat.jpg',
+        series: null,
       });
     });
 

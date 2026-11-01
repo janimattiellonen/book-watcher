@@ -53,15 +53,19 @@ recorded as failed.
 
 The website has these pages:
 
-| Page                                     | What it shows                                                    |
-| ---------------------------------------- | ---------------------------------------------------------------- |
-| **Suggestions** (`/`)                    | New books waiting for a decision                                 |
-| **Reading list**, **Read**, **Rejected** | Books you have marked                                            |
-| **Listeners** (`/listeners`)             | The authors you follow, with each one's next expected run        |
-| A listener (`/listeners/<id>`)           | Its settings and every book it has found                         |
-| **Runs** (`/runs`)                       | The latest searches, with failed and suspicious ones highlighted |
+| Page                                     | What it shows                                                     |
+| ---------------------------------------- | ----------------------------------------------------------------- |
+| **Suggestions** (`/`)                    | New books waiting for a decision                                  |
+| **Reading list**, **Read**, **Rejected** | Books you have marked                                             |
+| **Series** (`/series`)                   | Every series your books belong to, with its books counted by page |
+| A series (`/series/<id>`)                | Its books in part order, and the parts Book Watcher doesn't have  |
+| **Listeners** (`/listeners`)             | The authors you follow, with each one's next expected run         |
+| A listener (`/listeners/<id>`)           | Its settings and every book it has found                          |
+| **Runs** (`/runs`)                       | The latest searches, with failed and suspicious ones highlighted  |
 
-A book sold by both stores is shown once, with a price and link for each.
+A book sold by both stores is shown once, with a price and link for each. When a page
+shows two or more books of the same series, they sit together under the series name, in
+part order. The four book pages can be filtered by listener, by series, or both.
 
 ## Adding an author
 
@@ -88,6 +92,33 @@ again. It never starts watching on half a seed.
 
 After the seed, each new book the listener finds within its price range is queued for
 the next digest. Later price drops into the range are queued too.
+
+## Series
+
+Book Watcher records the series a book belongs to, and its part number, from two places:
+
+- **Bokus** search results label most series books ("Del 7 - Åremorden"). These come
+  with the searches every run makes anyway, at no extra cost.
+- **Adlibris** shows the series only on each book's own page. After a listener's
+  searches, the run loads the pages of up to `MAX_SERIES_LOOKUPS_PER_RUN` (20) of its
+  books that have no series yet, newest first, with the usual 5–10 second pause before
+  each. That is at most 20 extra page loads, and 2 to 4 minutes, per run.
+
+Each book is looked up once. A page without a series counts as done and isn't loaded
+again. So a new author's lookups spread over the first few runs, and after that only
+new books are looked up. The lookups run only when that run's Adlibris search
+succeeded. They show on **Runs** as a `series` run (results = pages loaded, new books =
+series found). They never change a book's status or e-mail you, and the digest doesn't
+mention series.
+
+A series belongs to the first author named on its books. A series written with someone
+else may be filed under the co-author, even though your listener found it.
+
+A series page lists the missing parts between part 1 and the highest part it knows, as
+"Part 4: not in Book Watcher". A missing part may not be sold as an e-book in that
+language, may not be out yet, or may not be labelled with the series in the store. When
+some of the author's books are still waiting for a lookup, the page says so; those gaps
+may still fill in.
 
 ## E-mail digest
 
@@ -124,13 +155,14 @@ the day had no completed digest yet; otherwise it isn't recorded as a second one
 All settings live in `.env`; [`.env.example`](.env.example) lists them with their
 defaults. The rate limits:
 
-| Setting                   | Default | Meaning                                                                |
-| ------------------------- | ------- | ---------------------------------------------------------------------- |
-| `LISTENER_INTERVAL_HOURS` | 24      | Hours between two runs of the same listener. It can't be set below 24. |
-| `MIN_GAP_MINUTES`         | 30      | Minutes between the end of one run and the start of the next           |
-| `GAP_JITTER_MINUTES`      | 10      | A random 0 to this many minutes added to every gap                     |
-| `MAX_PAGES_PER_SEARCH`    | 10      | Result pages loaded per store in one search                            |
-| `SEK_TO_EUR`              | 0.087   | Euros per Swedish krona, for Bokus prices                              |
+| Setting                      | Default | Meaning                                                                             |
+| ---------------------------- | ------- | ----------------------------------------------------------------------------------- |
+| `LISTENER_INTERVAL_HOURS`    | 24      | Hours between two runs of the same listener. It can't be set below 24.              |
+| `MIN_GAP_MINUTES`            | 30      | Minutes between the end of one run and the start of the next                        |
+| `GAP_JITTER_MINUTES`         | 10      | A random 0 to this many minutes added to every gap                                  |
+| `MAX_PAGES_PER_SEARCH`       | 10      | Result pages loaded per store in one search                                         |
+| `MAX_SERIES_LOOKUPS_PER_RUN` | 20      | Adlibris book pages loaded per listener run to find series; 0 turns the lookups off |
+| `SEK_TO_EUR`                 | 0.087   | Euros per Swedish krona, for Bokus prices                                           |
 
 With the defaults the gap after each listener averages 35 minutes (the 30-minute gap plus
 5 minutes of average jitter), so about 40 listeners fit in a day, and fewer once the time
@@ -150,6 +182,19 @@ normal browser and see the parser section below.
 **A run _failed_ with "security checkpoint".** The store's bot protection didn't let the
 headless browser through. Wait a day; the scheduler won't retry that listener before
 its interval is up anyway. Don't work around the protection.
+
+**A `series` run failed.** Usually Adlibris blocked a book page with its security
+checkpoint (`BlockedError` in the error). The lookups stop for that run, and the books
+not yet looked up wait for the listener's next run. The run's searches and books are
+not affected. A page that turns out not to be the expected book, e.g. one with another
+ISBN, is logged as "skipped" and tried again on a later run. If every lookup is
+skipped, or none finds a series, Adlibris may have changed its book pages. Save one (a
+real request) and see what the parser makes of it:
+
+```bash
+npm run capture -- --source adlibris --book --url <book page url> --name book-<slug>
+npm run series-lookup -- --fixture tests/fixtures/adlibris/book-<slug>.html
+```
 
 **"Stopped at the page limit"** in the scheduler's output means the author has more
 books than `MAX_PAGES_PER_SEARCH` pages hold. Raise it if you want them all.
@@ -176,6 +221,8 @@ Each capture is a real request to the store, so keep them few.
 | `npm run test:db`                                                               | Migrates `book_watcher_test`, then runs the database tests           |
 | `npm run search -- --source <store> --fixture <file>`                           | Prints what a parser makes of a saved page                           |
 | `npm run search -- --source <store> --author <name> --language <sv\|fi> --live` | Searches the store itself (one real request)                         |
+| `npm run series-lookup -- --fixture <file>`                                     | Prints the series the lookup reads from a saved Adlibris book page   |
+| `npm run series-lookup -- --url <adlibris book url> --live`                     | Loads the book page from Adlibris (one real request)                 |
 | `npm run build && npm start`                                                    | The production build of the website, on port 3192                    |
 
 Schema changes are SQL migrations; see [`docs/migrations.md`](docs/migrations.md).

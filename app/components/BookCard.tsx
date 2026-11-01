@@ -4,12 +4,13 @@ import { Link } from 'react-router';
 import type { BookListItem } from '../../src/db/books';
 import { formatPrice } from '../../src/notifications/digest';
 import { SOURCE_LABELS } from '../../src/sources/types';
+import { partLabel } from '../lib/seriesGroups';
 
 const date = new Intl.DateTimeFormat('en-GB', { dateStyle: 'medium' });
 
 /**
- * One book: cover, title, authors, a price and link per store, and the listeners that
- * found it. A book sold by both stores is one card with two offers. `children` holds
+ * One book: cover, title, authors, its series, a price and link per store, and the
+ * listeners that found it. A book sold by both stores is one card with two offers. `children` holds
  * the card's controls.
  */
 export function BookCard({
@@ -32,6 +33,14 @@ export function BookCard({
       <div className="min-w-0 flex-1">
         <h2 className="font-medium text-gray-900 dark:text-gray-100">{book.title}</h2>
         <p className="text-sm text-gray-600 dark:text-gray-400">{book.authors.join(', ')}</p>
+        {book.series ? (
+          <p className="text-sm text-gray-600 dark:text-gray-400">
+            {book.series.part === null ? null : `${partLabel(book.series.part)} · `}
+            <Link to={`/series/${book.series.id}`} className="hover:underline">
+              {book.series.name}
+            </Link>
+          </p>
+        ) : null}
         <ul className="mt-1 space-y-0.5 text-sm">
           {book.offers.map((offer) => (
             <li key={offer.source}>

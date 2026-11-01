@@ -23,6 +23,8 @@ const schema = z.object({
   GAP_JITTER_MINUTES: z.coerce.number().int().min(0).default(10),
   /** Upper bound on result pages loaded per source in one search. */
   MAX_PAGES_PER_SEARCH: positiveInt.default(10),
+  /** Adlibris book pages loaded per listener run for the series lookup; 0 turns it off. */
+  MAX_SERIES_LOOKUPS_PER_RUN: z.coerce.number().int().min(0).default(20),
   /** Price of one Swedish krona in euros, for Bokus prices. */
   SEK_TO_EUR: z.coerce.number().positive().default(0.087),
 
@@ -61,6 +63,7 @@ export interface Config {
   minGapMinutes: number;
   gapJitterMinutes: number;
   maxPagesPerSearch: number;
+  maxSeriesLookupsPerRun: number;
   sekToEur: number;
   emailNotificationsEnabled: boolean;
   /** 'HH:MM', local time. */
@@ -75,6 +78,7 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): Config {
     minGapMinutes: parsed.MIN_GAP_MINUTES,
     gapJitterMinutes: parsed.GAP_JITTER_MINUTES,
     maxPagesPerSearch: parsed.MAX_PAGES_PER_SEARCH,
+    maxSeriesLookupsPerRun: parsed.MAX_SERIES_LOOKUPS_PER_RUN,
     sekToEur: parsed.SEK_TO_EUR,
     emailNotificationsEnabled: parsed.EMAIL_NOTIFICATIONS_ENABLED,
     digestTime: parsed.DIGEST_TIME,

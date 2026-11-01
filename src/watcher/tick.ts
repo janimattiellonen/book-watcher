@@ -74,7 +74,12 @@ export function createTicker(deps: TickDeps): Ticker {
             `${source.source} ${source.status}${source.newBooks ? ` (${source.newBooks} new)` : ''}`,
         )
         .join(', ');
-      deps.log(`${listener.name}: ${outcome}${summary.activated ? '; seeded, now active' : ''}`);
+      const lookups = summary.seriesLookup
+        ? `; series lookups ${summary.seriesLookup.status} (${summary.seriesLookup.pages} pages, ${summary.seriesLookup.found} found)`
+        : '';
+      deps.log(
+        `${listener.name}: ${outcome}${summary.activated ? '; seeded, now active' : ''}${lookups}`,
+      );
     } catch (error) {
       deps.log(`Listener run failed: ${describe(error)}`);
     } finally {

@@ -27,6 +27,7 @@ function result(isbn: string): SearchResult {
     currency: 'EUR',
     url: `https://www.adlibris.com/fi/kirja/book-${isbn}`,
     coverUrl: null,
+    series: null,
   };
 }
 

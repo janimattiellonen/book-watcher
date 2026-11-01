@@ -43,4 +43,14 @@ describe('scheduleCapacity', () => {
     });
     expect(capacity).toMatchObject({ intervalMinutes: 2880, fits: true });
   });
+
+  it('adds the series lookup time to each listener that searches Adlibris', () => {
+    const capacity = scheduleCapacity({
+      listeners: [...listeners(1, ['bokus']), ...listeners(1)],
+      averageRunSeconds: 60,
+      averageSeriesLookupSeconds: 180,
+      config,
+    });
+    expect(capacity.cycleMinutes).toBe(35 + 1 + (35 + 2 + 3));
+  });
 });

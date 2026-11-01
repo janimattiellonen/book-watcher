@@ -106,6 +106,8 @@ export function parseAdlibris(html: string): ParsedPage {
         currency: 'EUR',
         url: new URL(href ?? '', ADLIBRIS_ORIGIN).toString(),
         coverUrl: coverUrl(card.find('img').first().attr('src')),
+        // Cards don't show the series; the book page does (series lookup).
+        series: null,
       };
     });
 

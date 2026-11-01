@@ -37,6 +37,7 @@ const book = (overrides: Partial<SearchResult> = {}): SearchResult => ({
   currency: 'SEK',
   url: 'https://www.bokus.com/bok/9789137138466/i-stundens-hetta',
   coverUrl: null,
+  series: null,
   ...overrides,
 });
 

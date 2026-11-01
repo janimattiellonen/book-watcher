@@ -32,6 +32,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
 
 const NAV_ITEMS = [
   ...BOOK_VIEWS.map((view) => ({ to: view.path, label: view.title })),
+  { to: '/series', label: 'Series' },
   { to: '/listeners', label: 'Listeners' },
   { to: '/runs', label: 'Runs' },
 ];

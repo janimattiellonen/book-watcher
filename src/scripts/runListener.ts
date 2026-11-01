@@ -74,12 +74,14 @@ async function main(id: number, force: boolean): Promise<number> {
     );
     const summary = await withLiveSearch(
       { maxPagesPerSearch: config.maxPagesPerSearch },
-      (search, pause) =>
+      (search, pause, loadBookPage) =>
         runListener(
           {
             db,
             search,
             pause,
+            loadBookPage,
+            maxSeriesLookups: config.maxSeriesLookupsPerRun,
             now: () => new Date(),
             sekToEur: config.sekToEur,
             log: console.warn,
@@ -89,6 +91,13 @@ async function main(id: number, force: boolean): Promise<number> {
     );
 
     console.table(summary.sources);
+    if (summary.seriesLookup) {
+      const { status, pages, found, error } = summary.seriesLookup;
+      console.log(
+        `Series lookups: ${pages} Adlibris book page(s), ${found} series found` +
+          (status === 'failed' ? `; stopped: ${error}` : ''),
+      );
+    }
     if (summary.kind === 'seed') {
       console.log(
         summary.activated

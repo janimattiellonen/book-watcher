@@ -2,9 +2,11 @@ import { data, Form } from 'react-router';
 
 import { listBooks } from '../../src/db/books';
 import { listListeners } from '../../src/db/listeners';
+import { listSeries } from '../../src/db/series';
 import { BookCard, formatDate } from '../components/BookCard';
+import { SeriesGroups } from '../components/SeriesGroups';
 import { StatusButtons } from '../components/StatusButtons';
-import { parseListenerFilter, viewForParam } from '../lib/bookViews';
+import { parseListenerFilter, parseSeriesFilter, viewForParam } from '../lib/bookViews';
 import { db } from '../lib/db.server';
 import type { Route } from './+types/books';
 
@@ -17,16 +19,30 @@ export async function loader({ params, request }: Route.LoaderArgs) {
   const view = viewForParam(params.view);
   if (!view) throw data('Not found', { status: 404 });
 
-  const listenerId = parseListenerFilter(new URL(request.url).searchParams);
-  const [books, listeners] = await Promise.all([
-    listBooks(db, { status: view.status, listenerId }),
+  const searchParams = new URL(request.url).searchParams;
+  const listenerId = parseListenerFilter(searchParams);
+  const seriesId = parseSeriesFilter(searchParams);
+  const [books, listeners, series] = await Promise.all([
+    listBooks(db, { status: view.status, listenerId, seriesId }),
     listListeners(db),
+    listSeries(db),
   ]);
-  return { view, books, listeners, listenerId: listenerId ?? null };
+  return {
+    view,
+    books,
+    listeners,
+    series,
+    listenerId: listenerId ?? null,
+    seriesId: seriesId ?? null,
+  };
 }
 
+const selectClass =
+  'rounded border border-gray-300 bg-white px-2 py-1 text-gray-900 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100';
+
 export default function Books({ loaderData }: Route.ComponentProps) {
-  const { view, books, listeners, listenerId } = loaderData;
+  const { view, books, listeners, series, listenerId, seriesId } = loaderData;
+  const filtered = listenerId !== null || seriesId !== null;
 
   return (
     <main className="mx-auto max-w-5xl p-8">
@@ -47,12 +63,29 @@ export default function Books({ loaderData }: Route.ComponentProps) {
             name="listener"
             defaultValue={listenerId ?? ''}
             key={listenerId ?? ''}
-            className="rounded border border-gray-300 bg-white px-2 py-1 text-gray-900 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100"
+            className={selectClass}
           >
             <option value="">All listeners</option>
             {listeners.map((listener) => (
               <option key={listener.id} value={listener.id}>
                 {listener.name}
+              </option>
+            ))}
+          </select>
+          <label htmlFor="series" className="ml-2 text-gray-700 dark:text-gray-300">
+            Series
+          </label>
+          <select
+            id="series"
+            name="series"
+            defaultValue={seriesId ?? ''}
+            key={`series-${seriesId ?? ''}`}
+            className={selectClass}
+          >
+            <option value="">All series</option>
+            {series.map((s) => (
+              <option key={s.id} value={s.id}>
+                {s.name} ({s.author})
               </option>
             ))}
           </select>
@@ -67,23 +100,26 @@ export default function Books({ loaderData }: Route.ComponentProps) {
 
       {books.length === 0 ? (
         <p className="mt-6 text-gray-600 dark:text-gray-400">
-          {listenerId === null ? view.empty : 'No books from this listener here.'}
+          {filtered ? 'No books match the filter here.' : view.empty}
         </p>
       ) : (
         <div className="mt-4">
-          {books.map((book) => {
-            const at = view.status === 'new' ? book.eligibleAt : book.statusChangedAt;
-            const verb = view.status === 'new' ? 'Found' : 'Moved here';
-            return (
-              <BookCard
-                key={book.id}
-                book={book}
-                dateLabel={at ? `${verb} ${formatDate(at)}` : null}
-              >
-                <StatusButtons bookId={book.id} status={book.status} />
-              </BookCard>
-            );
-          })}
+          <SeriesGroups
+            books={books}
+            renderBook={(book) => {
+              const at = view.status === 'new' ? book.eligibleAt : book.statusChangedAt;
+              const verb = view.status === 'new' ? 'Found' : 'Moved here';
+              return (
+                <BookCard
+                  key={book.id}
+                  book={book}
+                  dateLabel={at ? `${verb} ${formatDate(at)}` : null}
+                >
+                  <StatusButtons bookId={book.id} status={book.status} />
+                </BookCard>
+              );
+            }}
+          />
         </div>
       )}
     </main>

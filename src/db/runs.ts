@@ -1,7 +1,8 @@
 import type { SourceId } from '../sources/types.js';
 import type { Queryable } from './pool.js';
 
-export type RunKind = 'seed' | 'watch';
+/** 'series' is a listener run's Adlibris book-page lookups, logged after its searches. */
+export type RunKind = 'seed' | 'watch' | 'series';
 export type RunStatus = 'running' | 'ok' | 'failed' | 'suspicious';
 
 export interface Run {
@@ -92,7 +93,8 @@ export async function lastFinishedAt(db: Queryable): Promise<Date | null> {
 
 /**
  * Whether a search of this source for this listener has ever returned results. The
- * suspicious-result guard treats 0 results after that as a sign of breakage.
+ * suspicious-result guard treats 0 results after that as a sign of breakage. Series
+ * lookups are not searches, so their rows don't count.
  */
 export async function hadResultsBefore(
   db: Queryable,
@@ -101,7 +103,8 @@ export async function hadResultsBefore(
 ): Promise<boolean> {
   const { rows } = await db.query<{ had: boolean }>(
     `SELECT EXISTS (
-       SELECT 1 FROM runs WHERE listener_id = $1 AND source = $2 AND results > 0
+       SELECT 1 FROM runs
+       WHERE listener_id = $1 AND source = $2 AND kind <> 'series' AND results > 0
      ) AS had`,
     [listenerId, source],
   );
@@ -126,18 +129,39 @@ export async function listRecentRuns(
 
 /**
  * How long one listener-source search takes on average, in seconds, over the latest
- * finished runs. Null before any run has finished.
+ * finished searches. Null before any search has finished. Series lookups have their own
+ * average, `averageSeriesLookupSeconds`.
  */
 export async function averageRunSeconds(db: Queryable, sample = 100): Promise<number | null> {
+  return averageSeconds(db, false, sample);
+}
+
+/**
+ * How long one listener run's series lookups take on average, in seconds, over the
+ * latest finished ones. Null before any lookups have run.
+ */
+export async function averageSeriesLookupSeconds(
+  db: Queryable,
+  sample = 100,
+): Promise<number | null> {
+  return averageSeconds(db, true, sample);
+}
+
+/** The average over series lookup runs (`seriesRuns`) or over search runs. */
+async function averageSeconds(
+  db: Queryable,
+  seriesRuns: boolean,
+  sample: number,
+): Promise<number | null> {
   const { rows } = await db.query<{ seconds: number | null }>(
     `SELECT avg(EXTRACT(EPOCH FROM finished_at - started_at))::float8 AS seconds
      FROM (
        SELECT started_at, finished_at FROM runs
-       WHERE finished_at IS NOT NULL
+       WHERE finished_at IS NOT NULL AND (kind = 'series') = $2
        ORDER BY started_at DESC
        LIMIT $1
      ) latest`,
-    [sample],
+    [sample, seriesRuns],
   );
   return rows[0].seconds;
 }

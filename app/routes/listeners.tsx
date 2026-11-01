@@ -1,7 +1,7 @@
 import { data, Form, Link } from 'react-router';
 
 import { deleteListener, listListeners, setListenerEnabled } from '../../src/db/listeners';
-import { averageRunSeconds, lastFinishedAt } from '../../src/db/runs';
+import { averageRunSeconds, averageSeriesLookupSeconds, lastFinishedAt } from '../../src/db/runs';
 import { scheduleCapacity } from '../../src/watcher/capacity';
 import { nextExpectedRuns } from '../../src/watcher/schedulePolicy';
 import { config } from '../lib/config.server';
@@ -15,16 +15,22 @@ export function meta(_args: Route.MetaArgs) {
 }
 
 export async function loader() {
-  const [listeners, lastRunEndedAt, runSeconds] = await Promise.all([
+  const [listeners, lastRunEndedAt, runSeconds, lookupSeconds] = await Promise.all([
     listListeners(db),
     lastFinishedAt(db),
     averageRunSeconds(db),
+    averageSeriesLookupSeconds(db),
   ]);
   const nextRuns = nextExpectedRuns({ listeners, lastRunEndedAt, now: new Date(), config });
   return {
     listeners,
     nextRuns: Object.fromEntries(nextRuns) as Record<number, Date | undefined>,
-    capacity: scheduleCapacity({ listeners, averageRunSeconds: runSeconds, config }),
+    capacity: scheduleCapacity({
+      listeners,
+      averageRunSeconds: runSeconds,
+      averageSeriesLookupSeconds: lookupSeconds,
+      config,
+    }),
   };
 }
 

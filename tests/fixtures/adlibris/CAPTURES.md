@@ -29,3 +29,14 @@ capture predate T4 and are not counted. Counted loads, by row:
 This is 5 over the plan's cap of 5. The overage was signed off by the project owner on
 2026-10-29 during the PR #2 review. The T4/T5 budget is spent; further live Adlibris loads
 need a new budget.
+
+## Book pages for the series lookup (series plan T4)
+
+The series spec allows at most 4 live Adlibris book-page loads (three pages plus one
+retry). Used: **3**, none retried.
+
+| Date       | URL                                                            | File                       | Purpose                  |
+| ---------- | -------------------------------------------------------------- | -------------------------- | ------------------------ |
+| 2026-10-31 | https://www.adlibris.com/fi/kirja/hildur-9789137506579         | `book-hildur.html`         | book page, series part 1 |
+| 2026-10-31 | https://www.adlibris.com/fi/kirja/tinna-9789137164328          | `book-tinna.html`          | book page, series part 5 |
+| 2026-10-31 | https://www.adlibris.com/fi/kirja/janiksen-vuosi-9789510394595 | `book-janiksen-vuosi.html` | book page, no series     |

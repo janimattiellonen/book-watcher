@@ -47,9 +47,9 @@ export default function Runs({ loaderData }: Route.ComponentProps) {
     <main className="mx-auto max-w-5xl p-8">
       <h1 className="text-2xl font-semibold text-gray-900 dark:text-gray-100">Runs</h1>
       <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">
-        The latest {RUN_LIMIT} searches, one per listener and store. A suspicious run found nothing
-        where earlier searches found books, which usually means the store blocked us or changed its
-        pages.
+        The latest {RUN_LIMIT} runs: a search per listener and store, and the series lookups that
+        follow an Adlibris search. A suspicious search found nothing where earlier searches found
+        books, which usually means the store blocked us or changed its pages.
       </p>
 
       {runs.length === 0 ? (

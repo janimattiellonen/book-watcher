@@ -1,6 +1,12 @@
 import { describe, expect, it } from 'vitest';
 
-import { bookStatusLabel, parseListenerFilter, parseStatusChange, viewForParam } from './bookViews';
+import {
+  bookStatusLabel,
+  parseListenerFilter,
+  parseSeriesFilter,
+  parseStatusChange,
+  viewForParam,
+} from './bookViews';
 
 function form(entries: [string, string][]): FormData {
   const formData = new FormData();
@@ -34,6 +40,23 @@ describe('parseListenerFilter', () => {
     expect(parseListenerFilter(new URLSearchParams('listener='))).toBeUndefined();
     expect(parseListenerFilter(new URLSearchParams('listener=1e3'))).toBeUndefined();
     expect(parseListenerFilter(new URLSearchParams(''))).toBeUndefined();
+  });
+});
+
+describe('parseSeriesFilter', () => {
+  it('reads a series id next to a listener id', () => {
+    const params = new URLSearchParams('listener=12&series=3');
+    expect(parseSeriesFilter(params)).toBe(3);
+    expect(parseListenerFilter(params)).toBe(12);
+    expect(parseSeriesFilter(new URLSearchParams('series=x'))).toBeUndefined();
+  });
+
+  it('ignores an id too large for a bigint, instead of sending it to the database', () => {
+    expect(parseSeriesFilter(new URLSearchParams('series=100000000000000000000'))).toBeUndefined();
+    expect(parseListenerFilter(new URLSearchParams('listener=9007199254740993'))).toBeUndefined();
+    expect(parseSeriesFilter(new URLSearchParams('series=9007199254740991'))).toBe(
+      9007199254740991,
+    );
   });
 });
 

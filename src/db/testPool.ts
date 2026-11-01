@@ -23,6 +23,6 @@ export function createTestPool(): Db {
 /** Empties every table and resets the id sequences, for a clean slate before each test. */
 export async function truncateAll(db: Db): Promise<void> {
   await db.query(
-    'TRUNCATE listeners, books, book_offers, listener_books, runs, notifications RESTART IDENTITY CASCADE',
+    'TRUNCATE listeners, books, book_offers, listener_books, runs, notifications, series RESTART IDENTITY CASCADE',
   );
 }

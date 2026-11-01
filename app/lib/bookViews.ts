@@ -57,9 +57,25 @@ export function bookStatusLabel(book: Pick<Book, 'status' | 'eligibleAt'>): stri
 }
 
 /** `?listener=<id>`; anything else means no filter. */
-export function parseListenerFilter(searchParams: URLSearchParams): number | undefined {
-  const value = searchParams.get('listener');
-  return value && /^\d+$/.test(value) ? Number(value) : undefined;
+export const parseListenerFilter = (searchParams: URLSearchParams) =>
+  parseIdFilter(searchParams, 'listener');
+
+/** `?series=<id>`; anything else means no filter. */
+export const parseSeriesFilter = (searchParams: URLSearchParams) =>
+  parseIdFilter(searchParams, 'series');
+
+/**
+ * A row id from a URL: plain digits that a JS number holds exactly. A longer one is out of
+ * range for Postgres's bigint, so querying it would be a 500 rather than a 404.
+ */
+export function parseRowId(value: string | null | undefined): number | undefined {
+  if (!value || !/^\d+$/.test(value)) return undefined;
+  const id = Number(value);
+  return Number.isSafeInteger(id) ? id : undefined;
+}
+
+function parseIdFilter(searchParams: URLSearchParams, name: string): number | undefined {
+  return parseRowId(searchParams.get(name));
 }
 
 export type StatusChange =

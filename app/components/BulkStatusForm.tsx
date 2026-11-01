@@ -3,6 +3,7 @@ import { Form, useLocation } from 'react-router';
 import type { BookStatus, ListenerBook } from '../../src/db/books';
 import { STATUS_ACTIONS } from '../lib/bookViews';
 import { BookCard } from './BookCard';
+import { SeriesGroups } from './SeriesGroups';
 
 const BULK_STATUSES: BookStatus[] = ['read', 'accepted', 'rejected'];
 
@@ -55,20 +56,24 @@ export function BulkStatusForm({
           </button>
         ))}
       </div>
-      {books.map((book) => (
-        <div key={book.id} className="flex items-start gap-3">
-          <input
-            type="checkbox"
-            name="bookId"
-            value={book.id}
-            aria-label={`Select ${book.title}`}
-            className="mt-5"
-          />
-          <div className="min-w-0 flex-1">
-            <BookCard book={book} dateLabel={statusLabel(book)} />
+      {/* Grouped by series, but each book keeps its own checkbox. */}
+      <SeriesGroups
+        books={books}
+        renderBook={(book) => (
+          <div key={book.id} className="flex items-start gap-3">
+            <input
+              type="checkbox"
+              name="bookId"
+              value={book.id}
+              aria-label={`Select ${book.title}`}
+              className="mt-5"
+            />
+            <div className="min-w-0 flex-1">
+              <BookCard book={book} dateLabel={statusLabel(book)} />
+            </div>
           </div>
-        </div>
-      ))}
+        )}
+      />
     </Form>
   );
 }

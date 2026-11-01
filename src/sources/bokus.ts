@@ -8,6 +8,7 @@ import {
   parsePrice,
   validateResults,
 } from './parsing.js';
+import { parseBokusSeriesLabel } from './series.js';
 import { type Format, type ParsedPage, type SearchQuery, UnexpectedPageError } from './types.js';
 
 export const BOKUS_ORIGIN = 'https://www.bokus.com';
@@ -102,6 +103,8 @@ export function parseBokus(html: string): ParsedPage {
         currency: 'SEK',
         url: new URL(href ?? '', BOKUS_ORIGIN).toString(),
         coverUrl: cover ? new URL(cover, BOKUS_ORIGIN).toString() : null,
+        // "Del 7 - Åremorden" above the title. Not every series book has one.
+        series: parseBokusSeriesLabel(card.find('.product-list-series').first().text()),
       };
     });
 

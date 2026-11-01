@@ -11,6 +11,7 @@ describe('loadConfig', () => {
       minGapMinutes: 30,
       gapJitterMinutes: 10,
       maxPagesPerSearch: 10,
+      maxSeriesLookupsPerRun: 20,
       sekToEur: 0.087,
       emailNotificationsEnabled: false,
       digestTime: '05:00',

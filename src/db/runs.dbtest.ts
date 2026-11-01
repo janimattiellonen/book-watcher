@@ -3,6 +3,7 @@ import { afterAll, beforeEach, describe, expect, it } from 'vitest';
 import { createListener, deleteListener } from './listeners.js';
 import {
   averageRunSeconds,
+  averageSeriesLookupSeconds,
   finishRun,
   hadResultsBefore,
   lastFinishedAt,
@@ -117,6 +118,16 @@ describe('hadResultsBefore', () => {
     expect(await hadResultsBefore(db, listenerId, 'bokus')).toBe(false);
     expect(await hadResultsBefore(db, listenerId, 'adlibris')).toBe(true);
   });
+
+  it('ignores series lookups, which are not searches', async () => {
+    const listenerId = await listener();
+    await finishRun(
+      db,
+      await startRun(db, { listenerId, source: 'adlibris', kind: 'series', now: at(0) }),
+      ok(5, at(1)),
+    );
+    expect(await hadResultsBefore(db, listenerId, 'adlibris')).toBe(false);
+  });
 });
 
 describe('listRecentRuns', () => {
@@ -169,5 +180,22 @@ describe('averageRunSeconds', () => {
     expect(await averageRunSeconds(db)).toBe(120);
     // Only the latest one.
     expect(await averageRunSeconds(db, 1)).toBe(180);
+  });
+
+  it('keeps searches and series lookups apart', async () => {
+    const listenerId = await listener();
+    await finishRun(
+      db,
+      await startRun(db, { listenerId, source: 'bokus', kind: 'watch', now: at(0) }),
+      ok(1, at(1)),
+    );
+    expect(await averageSeriesLookupSeconds(db)).toBeNull();
+    await finishRun(
+      db,
+      await startRun(db, { listenerId, source: 'adlibris', kind: 'series', now: at(2) }),
+      ok(3, at(6)),
+    );
+    expect(await averageRunSeconds(db)).toBe(60);
+    expect(await averageSeriesLookupSeconds(db)).toBe(240);
   });
 });

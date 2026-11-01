@@ -51,9 +51,18 @@ const ticker = createTicker({
         signal: abortRuns.signal,
         handleSignals: false,
       },
-      (search, pause) =>
+      (search, pause, loadBookPage) =>
         runListener(
-          { db, search, pause, now: () => new Date(), sekToEur: config.sekToEur, log },
+          {
+            db,
+            search,
+            pause,
+            loadBookPage,
+            maxSeriesLookups: config.maxSeriesLookupsPerRun,
+            now: () => new Date(),
+            sekToEur: config.sekToEur,
+            log,
+          },
           listener,
         ),
     ),

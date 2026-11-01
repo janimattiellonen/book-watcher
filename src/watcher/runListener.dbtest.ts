@@ -39,6 +39,7 @@ function book(isbn: string, overrides: Partial<SearchResult> = {}): SearchResult
     currency: 'SEK',
     url: `https://www.bokus.com/bok/${isbn}/`,
     coverUrl: null,
+    series: null,
     ...overrides,
   };
 }
@@ -81,6 +82,9 @@ async function run(
     },
     sekToEur: 0.087,
     log: (message) => log.push(message),
+    // The series lookups have their own tests; these runs don't make any.
+    loadBookPage: () => Promise.reject(new Error('no book pages in these tests')),
+    maxSeriesLookups: 0,
   };
   const summary = await runListener(deps, listener);
   return { summary, searched, log, pauses };

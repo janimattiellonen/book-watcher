@@ -139,6 +139,69 @@ describe('books', () => {
   });
 });
 
+describe('series', () => {
+  const insertSeries = (authorKey: string, nameKey: string) =>
+    db
+      .query<{ id: number }>(
+        `INSERT INTO series (name, name_key, author, author_key)
+         VALUES ($1, $1, $2, $2) RETURNING id`,
+        [nameKey, authorKey],
+      )
+      .then(({ rows }) => rows[0].id);
+
+  it('keeps one series per author and name, and the same name apart for two authors', async () => {
+    await insertSeries('viveca sten', 'hildur');
+    await expect(insertSeries('satu ramo', 'hildur')).resolves.toBeDefined();
+    await expect(insertSeries('viveca sten', 'hildur')).rejects.toThrow(/uq_series_author_name/);
+  });
+
+  it('rejects a part without a series, and a series without a source', async () => {
+    const bookId = await insertBook();
+    const seriesId = await insertSeries('satu ramo', 'hildur');
+    await expect(
+      db.query('UPDATE books SET series_part = 1 WHERE id = $1', [bookId]),
+    ).rejects.toThrow(/ck_books_series_consistent/);
+    await expect(
+      db.query('UPDATE books SET series_id = $2 WHERE id = $1', [bookId, seriesId]),
+    ).rejects.toThrow(/ck_books_series_consistent/);
+    await expect(
+      db.query(
+        "UPDATE books SET series_id = $2, series_part = 2.5, series_source = 'bokus' WHERE id = $1",
+        [bookId, seriesId],
+      ),
+    ).resolves.toBeDefined();
+  });
+
+  it('rejects an unknown series source', async () => {
+    const bookId = await insertBook();
+    const seriesId = await insertSeries('satu ramo', 'hildur');
+    await expect(
+      db.query("UPDATE books SET series_id = $2, series_source = 'amazon' WHERE id = $1", [
+        bookId,
+        seriesId,
+      ]),
+    ).rejects.toThrow(/ck_books_series_source/);
+  });
+
+  it('refuses to delete a series that books still belong to', async () => {
+    const bookId = await insertBook();
+    const seriesId = await insertSeries('satu ramo', 'hildur');
+    await db.query(
+      "UPDATE books SET series_id = $2, series_part = 1, series_source = 'adlibris' WHERE id = $1",
+      [bookId, seriesId],
+    );
+    await expect(db.query('DELETE FROM series WHERE id = $1', [seriesId])).rejects.toThrow(
+      /fk_books_series/,
+    );
+  });
+
+  it('accepts series lookup runs', async () => {
+    await expect(
+      db.query("INSERT INTO runs (source, kind, status) VALUES ('adlibris', 'series', 'running')"),
+    ).resolves.toBeDefined();
+  });
+});
+
 describe('notifications', () => {
   const insertDigest = (status: string) =>
     db.query("INSERT INTO notifications (digest_date, status) VALUES ('2026-10-30', $1)", [status]);
