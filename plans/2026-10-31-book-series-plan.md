@@ -393,6 +393,42 @@ under Task 16 of the base plan.
 
 **Estimated scope:** S
 
+**Final verification (2026-11-01):**
+
+- README: series on the website, a Series section on where series come from and what
+  the lookups cost, `MAX_SERIES_LOOKUPS_PER_RUN` under Settings, the `series-lookup`
+  commands under Development, and a failed `series` run under Troubleshooting. Each
+  point was checked against `seriesLookup.ts`, `runListener.ts`, `config.ts`,
+  `politeDelay` and the two scripts.
+- `npm run check`: 155 tests pass. `npm run test:db`: 104 tests pass.
+
+The spec's success criteria:
+
+1. **Migration.** On `book_watcher_test`, `db:migrate:down` removed the `series` table
+   and the four `books.series_*` columns, leaving `add-notifications-table` as the
+   latest migration; `db:migrate` put them back.
+2. **Bokus series.** The spec's command on the saved Viveca Sten page parses 27
+   results, 21 with a series: "Morden i Sandhamn" parts 1–11, "Åremorden" parts 1–7 and
+   "Havsfolket" parts 1–3.
+3. **Adlibris book pages.** `series-lookup --fixture` gives "Hildur-serien", part 1 for
+   Hildur, part 5 for Tinna, and no series for _Jäniksen vuosi_. That page stands in
+   for the Hietala book, which was not captured (T4).
+4. **Listener run.** The Viveca Sten listener's watch run (Checkpoint 2, 2026-11-01)
+   made its two normal searches (Adlibris 64 results, Bokus 27, both `ok`) plus 3
+   Adlibris book pages, under the cap. Its books show grouped by series in the book
+   views and on the listener page, and on `/series`. Tests: `seriesGroups.test.ts`.
+5. **Series page.** `/series/6` shows Morden i Sandhamn parts 1–11 in order with their
+   statuses. A temporary book as Åremorden part 9 showed "Part 8: not in Book Watcher"
+   and the note; it was deleted afterwards. Tests: `seriesGaps.test.ts`,
+   `seriesDetail.test.ts`.
+6. **Runs and the cap.** The lookups are run 9 on `/runs`, `kind` series, 3 results.
+   Test: `seriesLookup.dbtest.ts`, "loads at most the cap per run, and never looks a
+   book up twice".
+7. **Digest.** No digest or e-mail code changed. The digest tests' assertions are
+   untouched; `sendDailyDigest.dbtest.ts` got one line, `series: null` in its result
+   builder, because `SearchResult` gained the field (T3). Those tests pass.
+8. **`npm run check` and `npm run test:db`** pass, as above.
+
 ## Risks and Mitigations
 
 | Risk                                                                             | Impact | Mitigation                                                                                                                                |
