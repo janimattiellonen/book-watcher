@@ -287,7 +287,7 @@ All of the base spec's boundaries still apply. In addition:
 
 - Hildur, part 1;
 - Tinna, part 5;
-- one Heikki Hietala book with no series;
+- one book with no series: _Jäniksen vuosi_ by Heikki Hietala;
 - one retry.
 
 ## Success Criteria
@@ -297,7 +297,7 @@ All of the base spec's boundaries still apply. In addition:
    shows a series for the 21 labelled results: "Morden i Sandhamn" parts 1–11,
    "Åremorden" parts 1–7 and "Havsfolket" parts 1–3.
 3. `npm run series-lookup -- --fixture <file>` parses the captured Adlibris pages.
-   Hildur gives "Hildur-serien", part 1. Tinna gives part 5. The Hietala book gives
+   Hildur gives "Hildur-serien", part 1. Tinna gives part 5. _Jäniksen vuosi_ gives
    no series.
 4. After the Viveca Sten listener's next run, its books show grouped by series in
    the book views and on `/series`, with no more requests than a normal run
