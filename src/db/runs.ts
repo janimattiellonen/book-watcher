@@ -133,7 +133,7 @@ export async function listRecentRuns(
  * average, `averageSeriesLookupSeconds`.
  */
 export async function averageRunSeconds(db: Queryable, sample = 100): Promise<number | null> {
-  return averageSeconds(db, "kind <> 'series'", sample);
+  return averageSeconds(db, false, sample);
 }
 
 /**
@@ -144,23 +144,24 @@ export async function averageSeriesLookupSeconds(
   db: Queryable,
   sample = 100,
 ): Promise<number | null> {
-  return averageSeconds(db, "kind = 'series'", sample);
+  return averageSeconds(db, true, sample);
 }
 
+/** The average over series lookup runs (`seriesRuns`) or over search runs. */
 async function averageSeconds(
   db: Queryable,
-  kindCondition: string,
+  seriesRuns: boolean,
   sample: number,
 ): Promise<number | null> {
   const { rows } = await db.query<{ seconds: number | null }>(
     `SELECT avg(EXTRACT(EPOCH FROM finished_at - started_at))::float8 AS seconds
      FROM (
        SELECT started_at, finished_at FROM runs
-       WHERE finished_at IS NOT NULL AND ${kindCondition}
+       WHERE finished_at IS NOT NULL AND (kind = 'series') = $2
        ORDER BY started_at DESC
        LIMIT $1
      ) latest`,
-    [sample],
+    [sample, seriesRuns],
   );
   return rows[0].seconds;
 }
