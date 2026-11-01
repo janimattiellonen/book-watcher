@@ -100,8 +100,10 @@ The down migration deletes `kind = 'series'` runs, then reverses everything.
   with no part.
 - `parseAdlibrisSeriesLabel`: `<name> (osa <n>)`, or `<name>`.
 - `seriesNameKey`:
-  - case-fold, trim and collapse whitespace;
-  - strip a trailing `-serien`, ` serien`, `-sarja` or ` sarja`;
+  - `normalizeText`: case-fold, fold diacritics, punctuation to spaces, trim and
+    collapse whitespace;
+  - strip a trailing `-serien`, ` serien`, `-sarja` or ` sarja`, unless that is the
+    whole name;
   - entities are decoded by cheerio before the label gets here (checked in T3).
 - `seriesAuthorKey`: the book's first author, through the existing `normalizeName`.
 

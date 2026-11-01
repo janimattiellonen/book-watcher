@@ -135,15 +135,17 @@ book is labelled as one (e.g. most of the Astrid Lindgren results).
    the book's first author, normalized as for the ISBN-less dedupe key. Normalizing
    the name means:
    - case-fold and trim;
+   - fold diacritics and replace punctuation with spaces, as for author names;
    - collapse whitespace;
-   - drop a trailing "-serien", " serien", "-sarja" or " sarja";
+   - drop a trailing "-serien", " serien", "-sarja" or " sarja", unless that word is
+     the whole name;
    - decode HTML entities.
 
    So Adlibris's "Hildur-serien" and a Bokus "Hildur" by Satu Rämö become one series.
    Two authors' series that share a name ("Hildur", or a generic one like "Trilogin")
    stay apart. The display name is the first name seen. Accepted risk: a series whose
    books list different first authors, e.g. co-authors in a varying order, splits in
-   two. (Decided 2026-10-31.)
+   two. (Decided 2026-10-31; the diacritic and punctuation folding added 2026-11-01.)
 
 4. **One series per book.** A book's series and part come from:
    - Bokus, whenever a Bokus card shows one. This overwrites an Adlibris value,
