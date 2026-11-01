@@ -2,7 +2,7 @@ import { readFileSync } from 'node:fs';
 
 import { describe, expect, it } from 'vitest';
 
-import { parseAdlibrisBook } from './adlibrisBook.js';
+import { adlibrisBookSchema, parseAdlibrisBook } from './adlibrisBook.js';
 import { BlockedError, UnexpectedPageError } from './types.js';
 
 const fixture = (name: string) =>
@@ -38,5 +38,22 @@ describe('parseAdlibrisBook', () => {
     expect(() => parseAdlibrisBook(fixture('search-heikki-hietala-fi-ebook.html'))).toThrow(
       UnexpectedPageError,
     );
+  });
+});
+
+describe('adlibrisBookSchema', () => {
+  it('accepts what the parser gives for the fixtures', () => {
+    for (const name of ['book-hildur.html', 'book-tinna.html', 'book-janiksen-vuosi.html']) {
+      expect(adlibrisBookSchema.safeParse(parseAdlibrisBook(fixture(name))).success).toBe(true);
+    }
+  });
+
+  it('rejects a book page that is not shaped as the lookup needs', () => {
+    const bad = [
+      { isbn: '123', series: null },
+      { isbn: null, series: { name: '', part: 1 } },
+      { isbn: null, series: { name: 'Hildur-serien', part: -1 } },
+    ];
+    for (const book of bad) expect(adlibrisBookSchema.safeParse(book).success).toBe(false);
   });
 });

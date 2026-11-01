@@ -1,18 +1,28 @@
 import * as cheerio from 'cheerio';
 import type { Browser } from 'playwright';
+import { z } from 'zod';
 
 import { newPage, openPage } from './browser.js';
 import { assertNotBlocked, cleanText, isbnFrom } from './parsing.js';
-import { parseAdlibrisSeriesLabel, type SeriesRef } from './series.js';
+import { parseAdlibrisSeriesLabel } from './series.js';
 import { UnexpectedPageError } from './types.js';
 
-/** What the series lookup needs from an Adlibris book page. */
-export interface AdlibrisBook {
-  /** From the details list, to check the page is the book that was asked for. */
-  isbn: string | null;
+/**
+ * What the series lookup needs from an Adlibris book page. Validated with zod at the
+ * parser boundary, like the search results, so a markup change fails loudly.
+ */
+export const adlibrisBookSchema = z.object({
+  /** ISBN-13 from the details list, to check the page is the book that was asked for. */
+  isbn: z
+    .string()
+    .regex(/^97[89]\d{10}$/)
+    .nullable(),
   /** Null when the page has no "Sarja" line: a successful lookup that found no series. */
-  series: SeriesRef | null;
-}
+  series: z
+    .object({ name: z.string().min(1), part: z.number().nonnegative().nullable() })
+    .nullable(),
+});
+export type AdlibrisBook = z.infer<typeof adlibrisBookSchema>;
 
 /**
  * Reads an Adlibris (Finnish site) book page. The details list holds the series as
@@ -33,10 +43,18 @@ export function parseAdlibrisBook(html: string): AdlibrisBook {
   }
 
   const seriesLine = details.get('Sarja');
-  return {
+  const parsed = adlibrisBookSchema.safeParse({
     isbn: isbnFrom(details.get('ISBN')),
     series: seriesLine ? parseAdlibrisSeriesLabel(seriesLine) : null,
-  };
+  });
+  if (!parsed.success) {
+    throw new Error(
+      `The Adlibris book page failed validation: ${parsed.error.issues
+        .map((issue) => `${issue.path.join('.')}: ${issue.message}`)
+        .join('; ')}`,
+    );
+  }
+  return parsed.data;
 }
 
 /**
