@@ -57,8 +57,15 @@ export function bookStatusLabel(book: Pick<Book, 'status' | 'eligibleAt'>): stri
 }
 
 /** `?listener=<id>`; anything else means no filter. */
-export function parseListenerFilter(searchParams: URLSearchParams): number | undefined {
-  const value = searchParams.get('listener');
+export const parseListenerFilter = (searchParams: URLSearchParams) =>
+  parseIdFilter(searchParams, 'listener');
+
+/** `?series=<id>`; anything else means no filter. */
+export const parseSeriesFilter = (searchParams: URLSearchParams) =>
+  parseIdFilter(searchParams, 'series');
+
+function parseIdFilter(searchParams: URLSearchParams, name: string): number | undefined {
+  const value = searchParams.get(name);
   return value && /^\d+$/.test(value) ? Number(value) : undefined;
 }
 

@@ -4,6 +4,9 @@ export default [
   // One module serves the four book views: the index is Suggestions, and `:view` picks
   // the others (app/lib/bookViews.ts). An unknown view is a 404.
   index('routes/books.tsx', { id: 'books-suggestions' }),
+  // Before `:view`, so `/series` is never read as a book view.
+  route('series', 'routes/series.tsx'),
+  route('series/:id', 'routes/seriesDetail.tsx'),
   route(':view', 'routes/books.tsx', { id: 'books-view' }),
   route('books/status', 'routes/bookStatus.ts'),
   route('listeners', 'routes/listeners.tsx'),

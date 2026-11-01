@@ -13,6 +13,7 @@ vi.mock('../../src/db/books', async (importOriginal) => ({
   setStatus: vi.fn(() => Promise.resolve(1)),
 }));
 vi.mock('../../src/db/listeners', () => ({ listListeners: vi.fn(() => Promise.resolve([])) }));
+vi.mock('../../src/db/series', () => ({ listSeries: vi.fn(() => Promise.resolve([])) }));
 
 // The route args carry more than these tests use.
 type LoaderArgs = Parameters<typeof loader>[0];
@@ -41,10 +42,28 @@ beforeEach(() => {
 describe('books loader', () => {
   it('lists the status of the page, filtered by listener', async () => {
     await loader(loaderArgs('reading-list', '?listener=4'));
-    expect(listBooks).toHaveBeenCalledWith({}, { status: 'accepted', listenerId: 4 });
+    expect(listBooks).toHaveBeenCalledWith(
+      {},
+      { status: 'accepted', listenerId: 4, seriesId: undefined },
+    );
 
     await loader(loaderArgs(undefined));
-    expect(listBooks).toHaveBeenLastCalledWith({}, { status: 'new', listenerId: undefined });
+    expect(listBooks).toHaveBeenLastCalledWith(
+      {},
+      { status: 'new', listenerId: undefined, seriesId: undefined },
+    );
+  });
+
+  it('filters by series, also together with a listener', async () => {
+    const page = await loader(loaderArgs('read', '?series=7'));
+    expect(listBooks).toHaveBeenLastCalledWith(
+      {},
+      { status: 'read', listenerId: undefined, seriesId: 7 },
+    );
+    expect(page).toMatchObject({ seriesId: 7, listenerId: null });
+
+    await loader(loaderArgs('read', '?listener=4&series=7'));
+    expect(listBooks).toHaveBeenLastCalledWith({}, { status: 'read', listenerId: 4, seriesId: 7 });
   });
 
   it('is a 404 for an unknown view', async () => {
