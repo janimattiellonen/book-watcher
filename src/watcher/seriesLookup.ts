@@ -37,9 +37,24 @@ export interface SeriesLookupSummary {
  * this run: the rest wait for the next one.
  *
  * Logged as one `series` run when there was anything to look up; returns null when there
- * wasn't. Never touches a book's status or its notification flags.
+ * wasn't. Never touches a book's status or its notification flags. Never throws: a
+ * failure outside the page loads, a database error say, is logged and returned as a
+ * failed summary, so it can't fail the listener run around it (series spec, Boundaries).
  */
 export async function lookupSeries(
+  deps: SeriesLookupDeps,
+  listener: Listener,
+): Promise<SeriesLookupSummary | null> {
+  try {
+    return await lookUpQueuedBooks(deps, listener);
+  } catch (failure) {
+    const error = describe(failure);
+    deps.log(`${listener.name} / series lookup: stopped, ${error}`);
+    return { status: 'failed', pages: 0, found: 0, error };
+  }
+}
+
+async function lookUpQueuedBooks(
   deps: SeriesLookupDeps,
   listener: Listener,
 ): Promise<SeriesLookupSummary | null> {

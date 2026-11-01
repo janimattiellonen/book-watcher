@@ -54,6 +54,19 @@ function result(source: SourceId, isbn: string, series: SearchResult['series'] =
 /** A book page: a series, none, or an error to throw. */
 type FakePage = AdlibrisBook | Error;
 
+/** The pool, except that the series lookup queue's query rejects. */
+function withFailingQueue(pool: typeof db): typeof db {
+  return new Proxy(pool, {
+    get(target, property, receiver) {
+      if (property !== 'query') return Reflect.get(target, property, receiver) as unknown;
+      return (text: unknown, ...rest: unknown[]) =>
+        typeof text === 'string' && text.includes('"bookId"')
+          ? Promise.reject(new Error('connection terminated'))
+          : (target.query as (...args: unknown[]) => Promise<unknown>)(text, ...rest);
+    },
+  });
+}
+
 /** Runs a listener against fake searches and fake book pages, recording the pages loaded. */
 async function run(
   listener: Listener,
@@ -62,18 +75,21 @@ async function run(
     pages = {},
     maxSeriesLookups = 20,
     now = seedTime,
+    queueFails = false,
   }: {
     searches: Partial<Record<SourceId, SearchResult[] | Error>>;
     pages?: Record<string, FakePage>;
     maxSeriesLookups?: number;
     now?: Date;
+    /** Makes the lookup queue's query fail, like a database error would. */
+    queueFails?: boolean;
   },
 ) {
   const loaded: string[] = [];
   const log: string[] = [];
   let pauses = 0;
   const deps: RunDeps = {
-    db,
+    db: queueFails ? withFailingQueue(db) : db,
     search: (source) => {
       const fake = searches[source] ?? [];
       return fake instanceof Error
@@ -290,6 +306,28 @@ describe('Adlibris series lookups in listener runs', () => {
       expect.objectContaining({ isbn: '9789137000004', series: null, checked: false }),
     ]);
     expect(log.some((line) => line.includes('Timeout 30000ms exceeded'))).toBe(true);
+  });
+
+  it('does not fail the run, or the seed, when the lookup queue cannot be read', async () => {
+    const listener = await createListener(db, listenerInput);
+    const { summary, loaded, log } = await run(listener, {
+      searches: { adlibris: [result('adlibris', '9789137000001')] },
+      queueFails: true,
+    });
+
+    expect(loaded).toEqual([]);
+    expect(summary.activated).toBe(true);
+    expect(summary.sources.map((source) => source.status)).toEqual(['ok', 'ok']);
+    expect(summary.seriesLookup).toEqual({
+      status: 'failed',
+      pages: 0,
+      found: 0,
+      error: 'Error: connection terminated',
+    });
+    const reloaded = await reload(listener);
+    expect(reloaded.seedState).toBe('active');
+    expect(reloaded.lastRunAt).not.toBeNull();
+    expect(log.some((line) => line.includes('series lookup: stopped'))).toBe(true);
   });
 
   it('never queues a book for the digest or changes its status', async () => {
