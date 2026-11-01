@@ -287,7 +287,7 @@ All of the base spec's boundaries still apply. In addition:
 
 - Hildur, part 1;
 - Tinna, part 5;
-- one book with no series: _Jäniksen vuosi_ by Heikki Hietala;
+- one book with no series: _Jäniksen vuosi_ by Arto Paasilinna;
 - one retry.
 
 ## Success Criteria
