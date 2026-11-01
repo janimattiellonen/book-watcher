@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 import {
+  describeSeries,
   parseAdlibrisSeriesLabel,
   parseBokusSeriesLabel,
   seriesAuthorKey,
@@ -93,5 +94,13 @@ describe('seriesAuthorKey', () => {
   it('gives nothing without an author', () => {
     expect(seriesAuthorKey([])).toBeNull();
     expect(seriesAuthorKey([' '])).toBeNull();
+  });
+});
+
+describe('describeSeries', () => {
+  it('gives the name and the part when there is one', () => {
+    expect(describeSeries({ name: 'Hildur-serien', part: 1 })).toBe('Hildur-serien, part 1');
+    expect(describeSeries({ name: 'Hildur-serien', part: 2.5 })).toBe('Hildur-serien, part 2.5');
+    expect(describeSeries({ name: 'Hildur-serien', part: null })).toBe('Hildur-serien');
   });
 });

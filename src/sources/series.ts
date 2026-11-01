@@ -54,6 +54,11 @@ export function seriesAuthorKey(authors: readonly string[]): string | null {
   return first ? normalizeName(first) : null;
 }
 
+/** A series for the debug scripts: "Hildur-serien, part 1", or just the name without a part. */
+export function describeSeries(series: SeriesRef): string {
+  return series.part === null ? series.name : `${series.name}, part ${series.part}`;
+}
+
 /** "01" is 1, "2,5" is 2.5. */
 function parsePart(text: string): number {
   return Number(text.replace(',', '.'));

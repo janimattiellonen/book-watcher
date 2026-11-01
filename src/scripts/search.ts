@@ -13,6 +13,7 @@ import { parseArgs } from 'node:util';
 
 import { launchBrowser } from '../sources/browser.js';
 import { searchSource, sources } from '../sources/index.js';
+import { describeSeries } from '../sources/series.js';
 import { type ParsedPage, SOURCE_IDS, type SourceId } from '../sources/types.js';
 
 const { values } = parseArgs({
@@ -69,9 +70,7 @@ console.table(
     format: result.format,
     lang: result.language,
     price: result.price === null ? null : `${result.price} ${result.currency}`,
-    series: result.series
-      ? `${result.series.part === null ? '' : `${result.series.part}. `}${result.series.name}`
-      : null,
+    series: result.series ? describeSeries(result.series) : null,
     url: result.url,
   })),
 );

@@ -16,6 +16,7 @@ import {
   parseAdlibrisBook,
 } from '../sources/adlibrisBook.js';
 import { launchBrowser } from '../sources/browser.js';
+import { describeSeries } from '../sources/series.js';
 
 const { values } = parseArgs({
   options: {
@@ -45,10 +46,4 @@ if (values.fixture) {
 }
 
 console.log(`ISBN:   ${book.isbn ?? '(none)'}`);
-console.log(
-  `Series: ${
-    book.series
-      ? `${book.series.name}${book.series.part === null ? '' : `, part ${book.series.part}`}`
-      : '(none)'
-  }`,
-);
+console.log(`Series: ${book.series ? describeSeries(book.series) : '(none)'}`);
