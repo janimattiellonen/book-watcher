@@ -40,6 +40,10 @@ format and price requirements.
   e-book), min price and max price in EUR (each optional), sources (one or both,
   at least one required).
 - Input is validated: the author name is non-empty, prices are ≥ 0, and min ≤ max.
+- (Changed 2026-11-02, on request.) The form has no minimum price field; a listener's
+  existing minimum is kept as it is (a hidden input), and the "maximum below the
+  minimum" error names it. A new listener defaults to Swedish and a maximum of 14.00 €.
+  The Listeners page shows each listener's id in its own first column.
 - A new listener starts in seed state `pending`.
 - Deleting a listener keeps the books it found, along with their statuses.
 
@@ -236,7 +240,7 @@ CREATE TABLE books (
   language          text,
   format            text        NOT NULL,
   cover_url         text,
-  published_date    date,
+  published_date    date,                          -- replaced by published_year, see 2026-11-02-published-year.md
   status            text        NOT NULL DEFAULT 'new'
                     CHECK (status IN ('new','accepted','read','rejected')),
   status_changed_at timestamptz,
