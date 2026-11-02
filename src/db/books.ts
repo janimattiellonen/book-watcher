@@ -91,8 +91,9 @@ export interface UpsertResult {
 /**
  * Records a search result as a book, deduplicated by ISBN (or authors, title and
  * format). A known book keeps its status and details; only a missing cover or language
- * is filled in. A book becomes eligible once, the first time it is seen in range, and
- * with `notify` that is also when it is queued for the digest.
+ * is filled in, and a newer non-empty publication year replaces the stored one. A book
+ * becomes eligible once, the first time it is seen in range, and with `notify` that is
+ * also when it is queued for the digest.
  */
 export async function upsertFromResult(
   db: Queryable,
