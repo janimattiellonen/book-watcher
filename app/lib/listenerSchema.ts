@@ -71,7 +71,14 @@ const schema = z
   .refine(
     ({ minPriceEur, maxPriceEur }) =>
       minPriceEur === null || maxPriceEur === null || minPriceEur <= maxPriceEur,
-    { path: ['maxPriceEur'], message: 'The maximum price must be at least the minimum' },
+    {
+      path: ['maxPriceEur'],
+      // The form has no minimum field, so the message has to say what the minimum is.
+      error: ({ input }) => {
+        const { minPriceEur } = input as { minPriceEur: number };
+        return `The maximum price must be at least the minimum, ${minPriceEur.toFixed(2)} €`;
+      },
+    },
   );
 
 export function readListenerForm(formData: FormData): ListenerFormValues {

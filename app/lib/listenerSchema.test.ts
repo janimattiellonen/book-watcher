@@ -53,7 +53,7 @@ describe('parseListenerForm', () => {
     const result = parseListenerForm(form({ ...valid, minPriceEur: '10', maxPriceEur: '5' }));
     expect(result).toMatchObject({
       ok: false,
-      errors: { maxPriceEur: 'The maximum price must be at least the minimum' },
+      errors: { maxPriceEur: 'The maximum price must be at least the minimum, 10.00 €' },
     });
   });
 
