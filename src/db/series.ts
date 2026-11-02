@@ -102,12 +102,15 @@ export async function listLookupQueue(
   return rows;
 }
 
-/** Records a successful lookup, whether or not it found a series, so it isn't repeated. */
+/**
+ * Records a successful lookup, whether or not it found a series, so it isn't repeated,
+ * and fills in the book's publication year when it has none (null when the page gave none).
+ */
 export async function markSeriesChecked(
   db: Queryable,
   bookId: number,
   now: Date,
-  publishedYear: number | null = null,
+  publishedYear: number | null,
 ): Promise<void> {
   // The book page's year fills in one the search results didn't give (published year spec).
   await db.query(

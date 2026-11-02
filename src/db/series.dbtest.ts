@@ -209,7 +209,7 @@ describe('listLookupQueue and markSeriesChecked', () => {
     await book(l, { isbn: '9789137000003', sources: ['bokus'], minute: 6 });
     await book(other, { isbn: '9789137000004', minute: 7 });
 
-    await markSeriesChecked(db, checked, at(10));
+    await markSeriesChecked(db, checked, at(10), null);
     await applyBookSeries(db, {
       bookId: inSeries,
       authors: ['Satu Rämö'],
@@ -338,7 +338,7 @@ describe('countWaitingLookups', () => {
     const checked = await book(l, { isbn: '9789137000002' });
     await book(l, { isbn: '9789137000003', sources: ['bokus'] });
     await book(l, { isbn: '9789137000004', authors: ['Viveca Sten'] });
-    await markSeriesChecked(db, checked, at(10));
+    await markSeriesChecked(db, checked, at(10), null);
 
     expect(await countWaitingLookups(db, 'satu ramo')).toBe(1);
     expect(await countWaitingLookups(db, 'viveca sten')).toBe(1);
