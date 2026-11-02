@@ -79,9 +79,9 @@ part order. The four book pages can be filtered by listener, by series, or both.
    npm run run-listener -- --listener <id>
    ```
 
-   The id is in the listener's address, `/listeners/<id>`. The command follows the same
-   rate limits as the scheduler; `--force` skips them for testing (but never runs two
-   searches at once).
+   The id is in the first column on **Listeners**, and in the listener's address. The
+   command follows the same rate limits as the scheduler; `--force` skips them for
+   testing (but never runs two searches at once).
 
 3. Open the listener's page. **Found during the seed** lists the books that were
    already out. Tick the ones you have read or don't want, and mark them in one go.

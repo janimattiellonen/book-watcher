@@ -97,6 +97,7 @@ export default function Listeners({ loaderData }: Route.ComponentProps) {
         <table className="mt-6 w-full text-left text-sm text-gray-900 dark:text-gray-100">
           <thead className="border-b border-gray-200 text-gray-500 dark:border-gray-800 dark:text-gray-400">
             <tr>
+              <th className="py-2 pr-4 text-right font-medium">Id</th>
               <th className="py-2 pr-4 font-medium">Name</th>
               <th className="py-2 pr-4 font-medium">Author</th>
               <th className="py-2 pr-4 font-medium">Language</th>
@@ -116,6 +117,8 @@ export default function Listeners({ loaderData }: Route.ComponentProps) {
                 key={listener.id}
                 className={`border-b border-gray-100 dark:border-gray-900 ${listener.enabled ? '' : 'text-gray-400 dark:text-gray-600'}`}
               >
+                {/* The id `run-listener --listener <id>` takes. */}
+                <td className="py-2 pr-4 text-right tabular-nums">{listener.id}</td>
                 <td className="py-2 pr-4">
                   <Link
                     to={`/listeners/${listener.id}`}
