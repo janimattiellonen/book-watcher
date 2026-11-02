@@ -28,6 +28,7 @@ function result(isbn: string): SearchResult {
     url: `https://www.adlibris.com/fi/kirja/book-${isbn}`,
     coverUrl: null,
     series: null,
+    publishedYear: null,
   };
 }
 

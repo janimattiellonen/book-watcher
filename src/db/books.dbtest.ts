@@ -35,6 +35,7 @@ function result(overrides: Partial<SearchResult> = {}): SearchResult {
     url: 'https://www.bokus.com/bok/9789137138466/i-stundens-hetta/',
     coverUrl: null,
     series: null,
+    publishedYear: null,
     ...overrides,
   };
 }
@@ -132,6 +133,18 @@ describe('upsertFromResult', () => {
       status: 'read',
       firstSeenAt: now,
     });
+  });
+
+  it('stores the year, takes a newer one, and keeps it when a result has none', async () => {
+    const { book } = await upsertFromResult(db, result({ publishedYear: 2025 }), watchInRange);
+    expect(book.publishedYear).toBe(2025);
+
+    const corrected = await upsertFromResult(db, result({ publishedYear: 2026 }), watchInRange);
+    expect(corrected.book.publishedYear).toBe(2026);
+
+    const adlibris = result({ source: 'adlibris', publishedYear: null });
+    const withoutYear = await upsertFromResult(db, adlibris, watchInRange);
+    expect(withoutYear.book).toMatchObject({ id: book.id, publishedYear: 2026 });
   });
 
   it('deduplicates a book without an ISBN by authors, title and format', async () => {

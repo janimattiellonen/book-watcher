@@ -33,20 +33,20 @@ describe('groupBySeries', () => {
       ]),
     ).toEqual([
       'Helenas resa',
-      { 'Morden i Sandhamn': ['Sandhamn 1', 'Sandhamn 3'] },
-      { Åremorden: ['Åre 1', 'Åre 2'] },
+      { 'Morden i Sandhamn': ['Sandhamn 3', 'Sandhamn 1'] },
+      { Åremorden: ['Åre 2', 'Åre 1'] },
       'Återträffen',
     ]);
   });
 
-  it('orders a group by part, also past part 9 and between parts', () => {
+  it('orders a group last part first, also past part 9 and between parts', () => {
     expect(
       shape([
-        book('Ten', sandhamn, 10),
         book('Two', sandhamn, 2),
+        book('Ten', sandhamn, 10),
         book('Two and a half', sandhamn, 2.5),
       ]),
-    ).toEqual([{ 'Morden i Sandhamn': ['Two', 'Two and a half', 'Ten'] }]);
+    ).toEqual([{ 'Morden i Sandhamn': ['Ten', 'Two and a half', 'Two'] }]);
   });
 
   it('puts books without a part last, by title', () => {
@@ -57,7 +57,7 @@ describe('groupBySeries', () => {
         book('A', sandhamn),
         book('One', sandhamn, 1),
       ]),
-    ).toEqual([{ 'Morden i Sandhamn': ['One', 'Five', 'A', 'b'] }]);
+    ).toEqual([{ 'Morden i Sandhamn': ['Five', 'One', 'A', 'b'] }]);
   });
 
   it('leaves a book alone when no other book of its series is in the list', () => {

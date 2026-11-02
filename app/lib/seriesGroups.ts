@@ -12,8 +12,9 @@ export type SeriesItem<T> =
 /**
  * Groups an ordered book list by series (series spec US-S3). A group takes the place of
  * its first member, so the list's order still decides where it sits; within it, books
- * are in part order, books without a part last, by title. A book whose series has no
- * other book in the list stays on its own, like a book without a series.
+ * go last part first, since the latest parts are the interesting ones, and books
+ * without a part last, by title. A book whose series has no other book in the list
+ * stays on its own, like a book without a series.
  */
 export function groupBySeries<T extends SeriesBook>(books: T[]): SeriesItem<T>[] {
   const counts = new Map<number, number>();
@@ -50,7 +51,7 @@ function byPart(a: SeriesBook, b: SeriesBook): number {
   if (partA !== partB) {
     if (partA === null) return 1;
     if (partB === null) return -1;
-    return partA - partB;
+    return partB - partA;
   }
   return collator.compare(a.title, b.title);
 }

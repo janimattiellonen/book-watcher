@@ -39,14 +39,15 @@ export async function action({ params, request }: Route.ActionArgs) {
   return redirect('/listeners');
 }
 
+/** A new listener's defaults: Swedish, at most 14 €, the most common choices. */
 function toFormValues(listener: Listener | null): ListenerFormValues {
   return {
     name: listener?.name ?? '',
     author: listener?.author ?? '',
-    language: listener?.language ?? 'fi',
+    language: listener?.language ?? 'sv',
     format: listener?.format ?? 'ebook',
     minPriceEur: listener?.minPriceEur?.toFixed(2) ?? '',
-    maxPriceEur: listener?.maxPriceEur?.toFixed(2) ?? '',
+    maxPriceEur: listener ? (listener.maxPriceEur?.toFixed(2) ?? '') : '14.00',
     sources: listener?.sources ?? ['adlibris', 'bokus'],
     enabled: listener?.enabled ?? true,
   };
@@ -73,7 +74,7 @@ export default function ListenerForm({ loaderData, actionData }: Route.Component
   const formKey = actionData ? JSON.stringify(actionData.values) : 'initial';
 
   const textField = (
-    name: 'name' | 'author' | 'minPriceEur' | 'maxPriceEur',
+    name: 'name' | 'author' | 'maxPriceEur',
     label: string,
     extra: { hint?: string; inputMode?: 'decimal' } = {},
   ) => (
@@ -139,12 +140,13 @@ export default function ListenerForm({ loaderData, actionData }: Route.Component
           </div>
         </div>
 
+        {/* No minimum price field; a listener's existing minimum is kept as it is. */}
+        <input type="hidden" name="minPriceEur" value={values.minPriceEur} />
         <div className="grid grid-cols-2 gap-4">
-          {textField('minPriceEur', 'Minimum price (€)', { inputMode: 'decimal' })}
           {textField('maxPriceEur', 'Maximum price (€)', { inputMode: 'decimal' })}
         </div>
         <p className="-mt-3 text-xs text-gray-500 dark:text-gray-400">
-          Leave a price empty for no limit. Bokus prices are converted from SEK.
+          Leave it empty for no limit. Bokus prices are converted from SEK.
         </p>
 
         <fieldset aria-describedby={errors.sources ? 'sources-error' : undefined}>

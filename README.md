@@ -53,24 +53,27 @@ recorded as failed.
 
 The website has these pages:
 
-| Page                                     | What it shows                                                     |
-| ---------------------------------------- | ----------------------------------------------------------------- |
-| **Suggestions** (`/`)                    | New books waiting for a decision                                  |
-| **Reading list**, **Read**, **Rejected** | Books you have marked                                             |
-| **Series** (`/series`)                   | Every series your books belong to, with its books counted by page |
-| A series (`/series/<id>`)                | Its books in part order, and the parts Book Watcher doesn't have  |
-| **Listeners** (`/listeners`)             | The authors you follow, with each one's next expected run         |
-| A listener (`/listeners/<id>`)           | Its settings and every book it has found                          |
-| **Runs** (`/runs`)                       | The latest searches, with failed and suspicious ones highlighted  |
+| Page                                     | What it shows                                                       |
+| ---------------------------------------- | ------------------------------------------------------------------- |
+| **Suggestions** (`/`)                    | New books waiting for a decision                                    |
+| **Reading list**, **Read**, **Rejected** | Books you have marked                                               |
+| **Series** (`/series`)                   | Every series your books belong to, with its books counted by page   |
+| A series (`/series/<id>`)                | Its books, last part first, and the parts Book Watcher doesn't have |
+| **Listeners** (`/listeners`)             | The authors you follow, with each one's next expected run           |
+| A listener (`/listeners/<id>`)           | Its settings and every book it has found                            |
+| **Runs** (`/runs`)                       | The latest searches, with failed and suspicious ones highlighted    |
 
-A book sold by both stores is shown once, with a price and link for each. When a page
-shows two or more books of the same series, they sit together under the series name, in
-part order. The four book pages can be filtered by listener, by series, or both.
+A book sold by both stores is shown once, with a price and link for each. Its card shows
+the year it came out, when a store gives one: Bokus search results do, Adlibris only on
+the book pages the series lookup loads. When a page shows two or more books of the same
+series, they sit together under the series name, the last part first. The four book
+pages can be filtered by listener, by series, or both.
 
 ## Adding an author
 
 1. On **Listeners**, choose **New listener**. Give the author's name as the stores write
-   it, the language, an optional price range in euros, and the stores to search.
+   it, the language (Swedish by default), a maximum price in euros (14 € by default, empty
+   for no limit), and the stores to search.
 2. The listener's first run is its **seed**. It records every e-book the author has
    already published, without e-mailing you about any of them. Either wait for the
    scheduler to get to it, or run it now:
@@ -79,9 +82,9 @@ part order. The four book pages can be filtered by listener, by series, or both.
    npm run run-listener -- --listener <id>
    ```
 
-   The id is in the listener's address, `/listeners/<id>`. The command follows the same
-   rate limits as the scheduler; `--force` skips them for testing (but never runs two
-   searches at once).
+   The id is in the first column on **Listeners**, and in the listener's address. The
+   command follows the same rate limits as the scheduler; `--force` skips them for
+   testing (but never runs two searches at once).
 
 3. Open the listener's page. **Found during the seed** lists the books that were
    already out. Tick the ones you have read or don't want, and mark them in one go.

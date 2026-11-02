@@ -5,7 +5,7 @@ import { z } from 'zod';
 import { newPage, openPage } from './browser.js';
 import { assertNotBlocked, cleanText, isbnFrom } from './parsing.js';
 import { parseAdlibrisSeriesLabel } from './series.js';
-import { UnexpectedPageError } from './types.js';
+import { publishedYearSchema, UnexpectedPageError } from './types.js';
 
 /**
  * What the series lookup needs from an Adlibris book page. Validated with zod at the
@@ -21,13 +21,15 @@ export const adlibrisBookSchema = z.object({
   series: z
     .object({ name: z.string().min(1), part: z.number().nonnegative().nullable() })
     .nullable(),
+  /** The year of the page's "Julkaisupäivä", e.g. 2023 from "1.12.2023"; null without one. */
+  publishedYear: publishedYearSchema,
 });
 export type AdlibrisBook = z.infer<typeof adlibrisBookSchema>;
 
 /**
  * Reads an Adlibris (Finnish site) book page. The details list holds the series as
- * `<dt>Sarja</dt><dd><a …>Hildur-serien</a> (osa 01)</dd>`, next to "ISBN", "Kieli" and
- * the rest. A page without that list is not a book page.
+ * `<dt>Sarja</dt><dd><a …>Hildur-serien</a> (osa 01)</dd>`, next to "ISBN",
+ * "Julkaisupäivä" (`1.12.2023`) and the rest. A page without that list is not a book page.
  */
 export function parseAdlibrisBook(html: string): AdlibrisBook {
   assertNotBlocked(html);
@@ -46,6 +48,7 @@ export function parseAdlibrisBook(html: string): AdlibrisBook {
   const parsed = adlibrisBookSchema.safeParse({
     isbn: isbnFrom(details.get('ISBN')),
     series: seriesLine ? parseAdlibrisSeriesLabel(seriesLine) : null,
+    publishedYear: yearOfDate(details.get('Julkaisupäivä')),
   });
   if (!parsed.success) {
     throw new Error(
@@ -55,6 +58,12 @@ export function parseAdlibrisBook(html: string): AdlibrisBook {
     );
   }
   return parsed.data;
+}
+
+/** The year of a Finnish "d.m.yyyy" date; null for anything else. */
+function yearOfDate(text: string | undefined): number | null {
+  const match = /^\d{1,2}\.\d{1,2}\.(\d{4})$/.exec(text ?? '');
+  return match ? Number(match[1]) : null;
 }
 
 /**

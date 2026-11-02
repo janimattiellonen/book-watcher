@@ -48,6 +48,7 @@ function result(source: SourceId, isbn: string, series: SearchResult['series'] =
     url: source === 'bokus' ? `https://www.bokus.com/bok/${isbn}/` : urlOf(isbn),
     coverUrl: null,
     series,
+    publishedYear: null,
   } satisfies SearchResult;
 }
 
@@ -141,10 +142,12 @@ async function books() {
 const seriesRuns = async () =>
   (await listRecentRuns(db, { limit: 50 })).filter((run) => run.kind === 'series');
 
-const page = (isbn: string, name: string, part: number | null): AdlibrisBook => ({
-  isbn,
-  series: { name, part },
-});
+const page = (
+  isbn: string,
+  name: string,
+  part: number | null,
+  publishedYear: number | null = null,
+): AdlibrisBook => ({ isbn, series: { name, part }, publishedYear });
 
 describe('Bokus series in listener runs', () => {
   it('stores the series of Bokus results on a seed, and fills in known books on a watch run', async () => {
@@ -221,6 +224,28 @@ describe('Adlibris series lookups in listener runs', () => {
     ]);
     expect(await seriesRuns()).toEqual([
       expect.objectContaining({ source: 'adlibris', status: 'ok', results: 2, newBooks: 1 }),
+    ]);
+  });
+
+  it('fills in the year from the book page, keeping one the search results gave', async () => {
+    const listener = await createListener(db, listenerInput);
+    await run(listener, {
+      searches: {
+        bokus: [{ ...result('bokus', '9789137000001'), publishedYear: 2024 }],
+        adlibris: [result('adlibris', '9789137000001'), result('adlibris', '9789137000002')],
+      },
+      pages: {
+        [urlOf('9789137000001')]: page('9789137000001', 'Hildur-serien', 1, 2025),
+        [urlOf('9789137000002')]: page('9789137000002', 'Hildur-serien', 2, 2023),
+      },
+    });
+
+    const { rows } = await db.query<{ isbn: string; year: number | null }>(
+      'SELECT isbn, published_year AS year FROM books ORDER BY isbn',
+    );
+    expect(rows).toEqual([
+      { isbn: '9789137000001', year: 2024 },
+      { isbn: '9789137000002', year: 2023 },
     ]);
   });
 

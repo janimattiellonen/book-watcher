@@ -13,7 +13,7 @@ export function meta({ loaderData }: Route.MetaArgs) {
   return [{ title: `${loaderData?.series.name ?? 'Series'} · Book Watcher` }];
 }
 
-/** One series: its books in part order, its gaps, and what may still fill them (US-S4). */
+/** One series: its books last part first, its gaps, and what may still fill them (US-S4). */
 export async function loader({ params }: Route.LoaderArgs) {
   const id = parseRowId(params.id);
   const series = id === undefined ? null : await getSeries(db, id);

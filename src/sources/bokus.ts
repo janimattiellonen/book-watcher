@@ -84,6 +84,7 @@ export function parseBokus(html: string): ParsedPage {
         .toArray()
         .map((span) => cleanText($(span).text()).replace(/,$/, ''));
       const languageLabel = metaSpans.find((text) => text in LANGUAGE_LABELS);
+      const year = metaSpans.find((text) => /^\d{4}$/.test(text));
       const formatText = cleanText(formatLabel.text());
       const priceText = card.find('.price-large').first().text();
       const cover = card.find('img').first().attr('src');
@@ -105,6 +106,7 @@ export function parseBokus(html: string): ParsedPage {
         coverUrl: cover ? new URL(cover, BOKUS_ORIGIN).toString() : null,
         // "Del 7 - Åremorden" above the title. Not every series book has one.
         series: parseBokusSeriesLabel(card.find('.product-list-series').first().text()),
+        publishedYear: year ? Number(year) : null,
       };
     });
 

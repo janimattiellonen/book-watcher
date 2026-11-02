@@ -72,6 +72,7 @@ async function book(
     url: `https://example.com/${isbn}`,
     coverUrl: null,
     series: null,
+    publishedYear: null,
   };
   const { book: created } = await upsertFromResult(db, result, {
     inRange: true,
@@ -208,7 +209,7 @@ describe('listLookupQueue and markSeriesChecked', () => {
     await book(l, { isbn: '9789137000003', sources: ['bokus'], minute: 6 });
     await book(other, { isbn: '9789137000004', minute: 7 });
 
-    await markSeriesChecked(db, checked, at(10));
+    await markSeriesChecked(db, checked, at(10), null);
     await applyBookSeries(db, {
       bookId: inSeries,
       authors: ['Satu Rämö'],
@@ -266,7 +267,7 @@ describe('listSeries and getSeries', () => {
 });
 
 describe('books with their series', () => {
-  it('lists a series’ books in part order, books without a part last, by title', async () => {
+  it('lists a series’ books last part first, books without a part last, by title', async () => {
     const l = await listener();
     const third = await book(l, { isbn: '9789137000003', title: 'C' });
     const first = await book(l, { isbn: '9789137000001', title: 'A' });
@@ -286,8 +287,8 @@ describe('books with their series', () => {
 
     const [{ id: seriesId }] = await listSeries(db);
     const books = await listSeriesBooks(db, seriesId);
-    expect(books.map((b) => b.id)).toEqual([first, third, noPartA, noPartB]);
-    expect(books[1].series).toEqual({ id: seriesId, name: 'Hildur', part: 3 });
+    expect(books.map((b) => b.id)).toEqual([third, first, noPartA, noPartB]);
+    expect(books[0].series).toEqual({ id: seriesId, name: 'Hildur', part: 3 });
     expect(books[2].series).toEqual({ id: seriesId, name: 'Hildur', part: null });
   });
 
@@ -337,7 +338,7 @@ describe('countWaitingLookups', () => {
     const checked = await book(l, { isbn: '9789137000002' });
     await book(l, { isbn: '9789137000003', sources: ['bokus'] });
     await book(l, { isbn: '9789137000004', authors: ['Viveca Sten'] });
-    await markSeriesChecked(db, checked, at(10));
+    await markSeriesChecked(db, checked, at(10), null);
 
     expect(await countWaitingLookups(db, 'satu ramo')).toBe(1);
     expect(await countWaitingLookups(db, 'viveca sten')).toBe(1);

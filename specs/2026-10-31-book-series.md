@@ -14,7 +14,7 @@ catalogue easier to browse and shows which parts of a series I have read or am
 missing.
 
 - **User:** me, as before. It's a single-user local tool.
-- **Success:** on any book view, the parts of a series sit together in part order.
+- **Success:** on any book view, the parts of a series sit together, last part first.
   Each series has a page listing its known parts with their status, and the gaps.
   It costs the stores at most a few extra page loads per listener run.
 
@@ -82,7 +82,9 @@ book is labelled as one (e.g. most of the Astrid Lindgren results).
     and "Found since").
 - On the listener page's bulk form, each book in a group keeps its own checkbox, and
   "Select all" still ticks every book in the section.
-- Within a group, books are in part order. Books without a part come last, by title.
+- Within a group, books go last part first, since the latest parts are the ones of
+  interest. Books without a part come last, by title. (Changed from ascending
+  2026-11-02.)
 - A group takes the position its first member would have in the view's normal
   order, so the newest activity still comes first. Books without a series are
   listed as today.
@@ -92,8 +94,8 @@ book is labelled as one (e.g. most of the Astrid Lindgren results).
 
 **US-S4 Series page** (`/series/:id`)
 
-- Shows the series name, and every book in the database in that series, in part
-  order, with the usual book card and status buttons.
+- Shows the series name, and every book in the database in that series, last
+  part first, with the usual book card and status buttons.
 - Lists the gaps: whole part numbers missing between 1 and the highest known part,
   e.g. "Part 4: not in Book Watcher". Parts after the highest known one can't be
   seen, so they're never listed.
@@ -112,7 +114,7 @@ book is labelled as one (e.g. most of the Astrid Lindgren results).
 - Lists every series that has at least one book, sorted by name. Each row shows the
   number of books in each status, linked to the series page.
 - The four book views accept `?series=<id>` like `?listener=<id>`, and the two
-  combine. A series filter shows only that series's books, still in part order.
+  combine. A series filter shows only that series's books, still last part first.
 - The site navigation gets a "Series" link.
 
 **US-S6 E-mail digest unchanged**

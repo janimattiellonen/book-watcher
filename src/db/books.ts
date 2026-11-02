@@ -14,8 +14,8 @@ export interface Book {
   language: string | null;
   format: string;
   coverUrl: string | null;
-  /** 'YYYY-MM-DD'. */
-  publishedDate: string | null;
+  /** The year the stores give; Bokus cards and Adlibris book pages show it. */
+  publishedYear: number | null;
   status: BookStatus;
   statusChangedAt: Date | null;
   firstSeenAt: Date;
@@ -36,7 +36,7 @@ interface BookRow {
   language: string | null;
   format: string;
   cover_url: string | null;
-  published_date: string | null;
+  published_year: number | null;
   status: BookStatus;
   status_changed_at: Date | null;
   first_seen_at: Date;
@@ -57,7 +57,7 @@ function toBook(row: BookRow): Book {
     language: row.language,
     format: row.format,
     coverUrl: row.cover_url,
-    publishedDate: row.published_date,
+    publishedYear: row.published_year,
     status: row.status,
     statusChangedAt: row.status_changed_at,
     firstSeenAt: row.first_seen_at,
@@ -91,8 +91,9 @@ export interface UpsertResult {
 /**
  * Records a search result as a book, deduplicated by ISBN (or authors, title and
  * format). A known book keeps its status and details; only a missing cover or language
- * is filled in. A book becomes eligible once, the first time it is seen in range, and
- * with `notify` that is also when it is queued for the digest.
+ * is filled in, and a newer non-empty publication year replaces the stored one. A book
+ * becomes eligible once, the first time it is seen in range, and with `notify` that is
+ * also when it is queued for the digest.
  */
 export async function upsertFromResult(
   db: Queryable,
@@ -109,13 +110,14 @@ export async function upsertFromResult(
      upserted AS (
        INSERT INTO books
          (dedupe_key, isbn, title, authors, language, format, cover_url,
-          first_seen_at, eligible_at, notify_pending)
+          first_seen_at, eligible_at, notify_pending, published_year)
        VALUES ($1, $2, $3, $4, $5, $6, $7, $8,
                CASE WHEN $9::boolean THEN $8::timestamptz END,
-               $9::boolean AND $10::boolean)
+               $9::boolean AND $10::boolean, $11)
        ON CONFLICT (dedupe_key) DO UPDATE SET
          cover_url      = COALESCE(books.cover_url, EXCLUDED.cover_url),
          language       = COALESCE(books.language, EXCLUDED.language),
+         published_year = COALESCE(EXCLUDED.published_year, books.published_year),
          eligible_at    = COALESCE(books.eligible_at, EXCLUDED.eligible_at),
          notify_pending = books.notify_pending
                           OR (books.eligible_at IS NULL AND books.status = 'new'
@@ -137,6 +139,7 @@ export async function upsertFromResult(
       now,
       inRange,
       notify,
+      result.publishedYear,
     ],
   );
   const row = rows[0];
@@ -254,7 +257,7 @@ export async function listBooks(
 }
 
 /**
- * Every book in one series, in any status, in part order. Books without a part come
+ * Every book in one series, in any status, last part first. Books without a part come
  * last, by title.
  */
 export async function listSeriesBooks(db: Queryable, seriesId: number): Promise<BookListItem[]> {
@@ -262,7 +265,7 @@ export async function listSeriesBooks(db: Queryable, seriesId: number): Promise<
     `SELECT ${BOOK_LIST_COLUMNS}
      FROM books b
      WHERE b.series_id = $1
-     ORDER BY b.series_part NULLS LAST, lower(b.title), b.id`,
+     ORDER BY b.series_part DESC NULLS LAST, lower(b.title), b.id`,
     [seriesId],
   );
   return rows.map(toBookListItem);
