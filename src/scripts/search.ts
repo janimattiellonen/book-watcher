@@ -71,6 +71,7 @@ console.table(
     lang: result.language,
     price: result.price === null ? null : `${result.price} ${result.currency}`,
     series: result.series ? describeSeries(result.series) : null,
+    year: result.publishedYear,
     url: result.url,
   })),
 );

@@ -72,6 +72,7 @@ async function book(
     url: `https://example.com/${isbn}`,
     coverUrl: null,
     series: null,
+    publishedYear: null,
   };
   const { book: created } = await upsertFromResult(db, result, {
     inRange: true,

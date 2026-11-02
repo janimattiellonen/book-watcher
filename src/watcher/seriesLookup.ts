@@ -106,7 +106,7 @@ async function lookUpQueuedBooks(
       ) {
         found++;
       }
-      await markSeriesChecked(deps.db, candidate.bookId, deps.now());
+      await markSeriesChecked(deps.db, candidate.bookId, deps.now(), page.publishedYear);
     }
   } catch (failure) {
     // A database error: still close the run, so it doesn't stay 'running'.

@@ -14,8 +14,8 @@ export interface Book {
   language: string | null;
   format: string;
   coverUrl: string | null;
-  /** 'YYYY-MM-DD'. */
-  publishedDate: string | null;
+  /** The year the stores give; Bokus cards and Adlibris book pages show it. */
+  publishedYear: number | null;
   status: BookStatus;
   statusChangedAt: Date | null;
   firstSeenAt: Date;
@@ -36,7 +36,7 @@ interface BookRow {
   language: string | null;
   format: string;
   cover_url: string | null;
-  published_date: string | null;
+  published_year: number | null;
   status: BookStatus;
   status_changed_at: Date | null;
   first_seen_at: Date;
@@ -57,7 +57,7 @@ function toBook(row: BookRow): Book {
     language: row.language,
     format: row.format,
     coverUrl: row.cover_url,
-    publishedDate: row.published_date,
+    publishedYear: row.published_year,
     status: row.status,
     statusChangedAt: row.status_changed_at,
     firstSeenAt: row.first_seen_at,
@@ -109,13 +109,14 @@ export async function upsertFromResult(
      upserted AS (
        INSERT INTO books
          (dedupe_key, isbn, title, authors, language, format, cover_url,
-          first_seen_at, eligible_at, notify_pending)
+          first_seen_at, eligible_at, notify_pending, published_year)
        VALUES ($1, $2, $3, $4, $5, $6, $7, $8,
                CASE WHEN $9::boolean THEN $8::timestamptz END,
-               $9::boolean AND $10::boolean)
+               $9::boolean AND $10::boolean, $11)
        ON CONFLICT (dedupe_key) DO UPDATE SET
          cover_url      = COALESCE(books.cover_url, EXCLUDED.cover_url),
          language       = COALESCE(books.language, EXCLUDED.language),
+         published_year = COALESCE(EXCLUDED.published_year, books.published_year),
          eligible_at    = COALESCE(books.eligible_at, EXCLUDED.eligible_at),
          notify_pending = books.notify_pending
                           OR (books.eligible_at IS NULL AND books.status = 'new'
@@ -137,6 +138,7 @@ export async function upsertFromResult(
       now,
       inRange,
       notify,
+      result.publishedYear,
     ],
   );
   const row = rows[0];

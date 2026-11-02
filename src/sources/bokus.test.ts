@@ -43,7 +43,13 @@ describe('parseBokus', () => {
         url: 'https://www.bokus.com/bok/9789137161839/fordrivaren',
         coverUrl: 'https://image.bokus.com/images2/9789137161839_766',
         series: { name: 'Åremorden', part: 7 },
+        publishedYear: 2026,
       });
+    });
+
+    it('reads the year of every card', () => {
+      const years = page.results.map((result) => result.publishedYear);
+      expect(years.every((year) => year !== null && year >= 2000 && year <= 2026)).toBe(true);
     });
 
     it('reads the series of every labelled card, and none for the rest', () => {

@@ -63,9 +63,11 @@ The website has these pages:
 | A listener (`/listeners/<id>`)           | Its settings and every book it has found                            |
 | **Runs** (`/runs`)                       | The latest searches, with failed and suspicious ones highlighted    |
 
-A book sold by both stores is shown once, with a price and link for each. When a page
-shows two or more books of the same series, they sit together under the series name, the
-last part first. The four book pages can be filtered by listener, by series, or both.
+A book sold by both stores is shown once, with a price and link for each. Its card shows
+the year it came out, when a store gives one: Bokus search results do, Adlibris only on
+the book pages the series lookup loads. When a page shows two or more books of the same
+series, they sit together under the series name, the last part first. The four book
+pages can be filtered by listener, by series, or both.
 
 ## Adding an author
 

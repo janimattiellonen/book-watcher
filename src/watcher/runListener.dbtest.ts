@@ -40,6 +40,7 @@ function book(isbn: string, overrides: Partial<SearchResult> = {}): SearchResult
     url: `https://www.bokus.com/bok/${isbn}/`,
     coverUrl: null,
     series: null,
+    publishedYear: null,
     ...overrides,
   };
 }

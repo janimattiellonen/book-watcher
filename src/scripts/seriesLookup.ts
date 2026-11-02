@@ -46,4 +46,5 @@ if (values.fixture) {
 }
 
 console.log(`ISBN:   ${book.isbn ?? '(none)'}`);
+console.log(`Year:   ${book.publishedYear ?? '(none)'}`);
 console.log(`Series: ${book.series ? describeSeries(book.series) : '(none)'}`);

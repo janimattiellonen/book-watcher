@@ -108,6 +108,8 @@ export function parseAdlibris(html: string): ParsedPage {
         coverUrl: coverUrl(card.find('img').first().attr('src')),
         // Cards don't show the series; the book page does (series lookup).
         series: null,
+        // Adlibris cards show no year; a series lookup may read it from the book page.
+        publishedYear: null,
       };
     });
 

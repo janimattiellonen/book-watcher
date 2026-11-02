@@ -19,6 +19,9 @@ export interface SearchQuery {
   format: Format;
 }
 
+/** A book's publication year, as the stores show it. */
+export const publishedYearSchema = z.number().int().min(1400).max(2200).nullable();
+
 /**
  * One book as a source's search results page shows it. Validated with zod at the
  * parser boundary, so a markup change fails loudly instead of yielding half-empty books.
@@ -47,6 +50,8 @@ export const searchResultSchema = z.object({
   series: z
     .object({ name: z.string().min(1), part: z.number().nonnegative().nullable() })
     .nullable(),
+  /** The year on the results card. Bokus cards show it; Adlibris cards don't (null). */
+  publishedYear: publishedYearSchema,
 });
 export type SearchResult = z.infer<typeof searchResultSchema>;
 

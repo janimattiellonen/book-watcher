@@ -103,8 +103,18 @@ export async function listLookupQueue(
 }
 
 /** Records a successful lookup, whether or not it found a series, so it isn't repeated. */
-export async function markSeriesChecked(db: Queryable, bookId: number, now: Date): Promise<void> {
-  await db.query('UPDATE books SET series_checked_at = $2 WHERE id = $1', [bookId, now]);
+export async function markSeriesChecked(
+  db: Queryable,
+  bookId: number,
+  now: Date,
+  publishedYear: number | null = null,
+): Promise<void> {
+  // The book page's year fills in one the search results didn't give (published year spec).
+  await db.query(
+    `UPDATE books SET series_checked_at = $2, published_year = COALESCE(published_year, $3)
+     WHERE id = $1`,
+    [bookId, now, publishedYear],
+  );
 }
 
 export interface SeriesSummary extends Series {

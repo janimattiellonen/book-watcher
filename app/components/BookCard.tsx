@@ -68,7 +68,7 @@ export function BookCard({
                   </Fragment>
                 ))
               : null,
-            book.publishedDate ? `Published ${date.format(new Date(book.publishedDate))}` : null,
+            book.publishedYear ? `Published ${book.publishedYear}` : null,
             dateLabel,
           ]
             .filter(Boolean)
