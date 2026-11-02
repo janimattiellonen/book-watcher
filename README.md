@@ -70,7 +70,8 @@ part order. The four book pages can be filtered by listener, by series, or both.
 ## Adding an author
 
 1. On **Listeners**, choose **New listener**. Give the author's name as the stores write
-   it, the language, an optional price range in euros, and the stores to search.
+   it, the language (Swedish by default), a maximum price in euros (14 € by default, empty
+   for no limit), and the stores to search.
 2. The listener's first run is its **seed**. It records every e-book the author has
    already published, without e-mailing you about any of them. Either wait for the
    scheduler to get to it, or run it now:
