@@ -85,7 +85,18 @@ describe('parseStatusChange', () => {
     expect(change).toMatchObject({ ok: true, bookIds: [1, 2, 3], status: 'read' });
   });
 
-  it('refuses an unknown status, no books and a bad id', () => {
+  it('reads no books as a change of nothing, back to the page', () => {
+    expect(
+      parseStatusChange(
+        form([
+          ['status', 'read'],
+          ['redirectTo', '/listeners/2'],
+        ]),
+      ),
+    ).toEqual({ ok: true, bookIds: [], status: 'read', redirectTo: '/listeners/2' });
+  });
+
+  it('refuses an unknown status and a bad id', () => {
     expect(parseStatusChange(form([['bookId', '1']])).ok).toBe(false);
     expect(
       parseStatusChange(
@@ -95,10 +106,6 @@ describe('parseStatusChange', () => {
         ]),
       ).ok,
     ).toBe(false);
-    expect(parseStatusChange(form([['status', 'read']]))).toEqual({
-      ok: false,
-      error: 'No books selected',
-    });
     expect(
       parseStatusChange(
         form([

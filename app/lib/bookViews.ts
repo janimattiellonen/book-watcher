@@ -87,14 +87,14 @@ const isBookStatus = (value: unknown): value is BookStatus =>
 
 /**
  * A status change as posted by a book card (one `bookId`) or the bulk form (many). The
- * form says where to go back to; only same-site paths are followed.
+ * form says where to go back to; only same-site paths are followed. A bulk submit with
+ * nothing ticked is no books, not an error: it changes nothing and goes back.
  */
 export function parseStatusChange(formData: FormData): StatusChange {
   const status = formData.get('status');
   if (!isBookStatus(status)) return { ok: false, error: 'Unknown status' };
 
   const ids = formData.getAll('bookId');
-  if (ids.length === 0) return { ok: false, error: 'No books selected' };
   if (!ids.every((id) => typeof id === 'string' && /^\d+$/.test(id))) {
     return { ok: false, error: 'Bad book id' };
   }

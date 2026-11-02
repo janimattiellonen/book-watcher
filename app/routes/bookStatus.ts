@@ -13,6 +13,6 @@ export async function action({ request }: Route.ActionArgs) {
   const change = parseStatusChange(await request.formData());
   if (!change.ok) throw data(change.error, { status: 400 });
 
-  await setStatus(db, change.bookIds, change.status);
+  if (change.bookIds.length > 0) await setStatus(db, change.bookIds, change.status);
   return redirect(change.redirectTo);
 }
