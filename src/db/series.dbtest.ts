@@ -266,7 +266,7 @@ describe('listSeries and getSeries', () => {
 });
 
 describe('books with their series', () => {
-  it('lists a series’ books in part order, books without a part last, by title', async () => {
+  it('lists a series’ books last part first, books without a part last, by title', async () => {
     const l = await listener();
     const third = await book(l, { isbn: '9789137000003', title: 'C' });
     const first = await book(l, { isbn: '9789137000001', title: 'A' });
@@ -286,8 +286,8 @@ describe('books with their series', () => {
 
     const [{ id: seriesId }] = await listSeries(db);
     const books = await listSeriesBooks(db, seriesId);
-    expect(books.map((b) => b.id)).toEqual([first, third, noPartA, noPartB]);
-    expect(books[1].series).toEqual({ id: seriesId, name: 'Hildur', part: 3 });
+    expect(books.map((b) => b.id)).toEqual([third, first, noPartA, noPartB]);
+    expect(books[0].series).toEqual({ id: seriesId, name: 'Hildur', part: 3 });
     expect(books[2].series).toEqual({ id: seriesId, name: 'Hildur', part: null });
   });
 

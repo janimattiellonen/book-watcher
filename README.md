@@ -53,19 +53,19 @@ recorded as failed.
 
 The website has these pages:
 
-| Page                                     | What it shows                                                     |
-| ---------------------------------------- | ----------------------------------------------------------------- |
-| **Suggestions** (`/`)                    | New books waiting for a decision                                  |
-| **Reading list**, **Read**, **Rejected** | Books you have marked                                             |
-| **Series** (`/series`)                   | Every series your books belong to, with its books counted by page |
-| A series (`/series/<id>`)                | Its books in part order, and the parts Book Watcher doesn't have  |
-| **Listeners** (`/listeners`)             | The authors you follow, with each one's next expected run         |
-| A listener (`/listeners/<id>`)           | Its settings and every book it has found                          |
-| **Runs** (`/runs`)                       | The latest searches, with failed and suspicious ones highlighted  |
+| Page                                     | What it shows                                                       |
+| ---------------------------------------- | ------------------------------------------------------------------- |
+| **Suggestions** (`/`)                    | New books waiting for a decision                                    |
+| **Reading list**, **Read**, **Rejected** | Books you have marked                                               |
+| **Series** (`/series`)                   | Every series your books belong to, with its books counted by page   |
+| A series (`/series/<id>`)                | Its books, last part first, and the parts Book Watcher doesn't have |
+| **Listeners** (`/listeners`)             | The authors you follow, with each one's next expected run           |
+| A listener (`/listeners/<id>`)           | Its settings and every book it has found                            |
+| **Runs** (`/runs`)                       | The latest searches, with failed and suspicious ones highlighted    |
 
 A book sold by both stores is shown once, with a price and link for each. When a page
-shows two or more books of the same series, they sit together under the series name, in
-part order. The four book pages can be filtered by listener, by series, or both.
+shows two or more books of the same series, they sit together under the series name, the
+last part first. The four book pages can be filtered by listener, by series, or both.
 
 ## Adding an author
 

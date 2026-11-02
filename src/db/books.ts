@@ -254,7 +254,7 @@ export async function listBooks(
 }
 
 /**
- * Every book in one series, in any status, in part order. Books without a part come
+ * Every book in one series, in any status, last part first. Books without a part come
  * last, by title.
  */
 export async function listSeriesBooks(db: Queryable, seriesId: number): Promise<BookListItem[]> {
@@ -262,7 +262,7 @@ export async function listSeriesBooks(db: Queryable, seriesId: number): Promise<
     `SELECT ${BOOK_LIST_COLUMNS}
      FROM books b
      WHERE b.series_id = $1
-     ORDER BY b.series_part NULLS LAST, lower(b.title), b.id`,
+     ORDER BY b.series_part DESC NULLS LAST, lower(b.title), b.id`,
     [seriesId],
   );
   return rows.map(toBookListItem);
